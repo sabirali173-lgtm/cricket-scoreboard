@@ -15,20 +15,18 @@ body{
     margin:20px auto;
 }
 
-/* TOP BAR */
-
 .top-bar{
     display:flex;
-    align-items:center;
     justify-content:space-between;
+    align-items:center;
     background:#111;
     border:3px solid #fff;
 }
 
 .team{
     width:35%;
-    color:#fff;
     text-align:center;
+    color:#fff;
     font-size:42px;
     font-weight:bold;
     padding:20px;
@@ -48,7 +46,7 @@ body{
     background:#111;
     text-align:center;
     color:#fff;
-    padding:10px;
+    padding:12px;
 }
 
 .live{
@@ -66,41 +64,34 @@ body{
 
 .score{
     font-size:60px;
-    font-weight:bold;
     color:#ffe600;
-    margin-top:5px;
+    font-weight:bold;
 }
 
 .overs{
-    font-size:28px;
-    color:#fff;
+    font-size:26px;
     margin-top:5px;
 }
 
 .crr{
-    font-size:24px;
-    color:#fff;
-    margin-top:8px;
+    font-size:22px;
+    margin-top:5px;
 }
 
 .crr span{
     color:#00ff66;
-    font-weight:bold;
 }
-
-/* BATTING */
 
 .middle{
     display:flex;
     background:#222;
-    border-top:3px solid #fff;
 }
 
 .player{
     width:50%;
-    text-align:center;
     color:#fff;
-    padding:18px;
+    text-align:center;
+    padding:20px;
     border-right:1px solid #555;
 }
 
@@ -111,12 +102,12 @@ body{
 .title{
     color:#ffe600;
     font-size:22px;
-    margin-bottom:10px;
 }
 
 .player div:nth-child(2){
-    font-size:36px;
+    font-size:34px;
     font-weight:bold;
+    margin-top:10px;
 }
 
 .player div:nth-child(3){
@@ -124,17 +115,14 @@ body{
     margin-top:8px;
 }
 
-/* BOTTOM */
-
 .bottom{
     display:flex;
     justify-content:space-around;
-    align-items:center;
     background:#000;
     color:#fff;
-    font-size:24px;
     padding:15px;
     border-top:4px solid gold;
+    font-size:22px;
 }
 
 .bottom span{
