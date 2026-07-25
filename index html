@@ -1,1 +1,35 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Cricket Scoreboard</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="scoreboard">
+  <h1><span id="team1">Team 1</span> vs <span id="team2">Team 2</span></h1>
+
+  <h2>
+    <span id="runs">0</span>/<span id="wickets">0</span>
+    (<span id="overs">0</span> Overs)
+  </h2>
+
+  <h3>
+    <span id="batsman1"></span> &
+    <span id="batsman2"></span>
+  </h3>
+
+  <h4>Bowler: <span id="bowler"></span></h4>
+
+  <h4>Target: <span id="target"></span></h4>
+
+  <h4>Status: <span id="status"></span></h4>
+</div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
