@@ -14,6 +14,8 @@ onSnapshot(scoreRef, (snapshot) => {
     document.getElementById("wickets").textContent = data.wickets || 0;
     document.getElementById("overs").textContent = data.overs || "0.0";
 
+    document.getElementById("crr").textContent = data.crr || "0.00";
+
     document.getElementById("batsman1").textContent = data.batsman1 || "";
     document.getElementById("batsman1Runs").textContent = data.batsman1Runs || "";
 
