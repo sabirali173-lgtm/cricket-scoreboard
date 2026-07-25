@@ -128,4 +128,20 @@ body{
 .bottom span{
     color:#ffe600;
     font-weight:bold;
+ .extra-info{
+    background:#111;
+    color:#fff;
+    padding:12px 20px;
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    font-size:20px;
+    border-top:2px solid #444;
+    flex-wrap:wrap;
+}
+
+.extra-info span{
+    color:#00ff66;
+    font-weight:bold;
+}
 }
