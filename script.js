@@ -5,6 +5,13 @@ const scoreRef = doc(db, "scoreboard", "live");
 onSnapshot(scoreRef, (snapshot) => {
     if (!snapshot.exists()) return;
 
+    document.getElementById("crr").textContent = data.crr || "0.00";
+document.getElementById("rrr").textContent = data.rrr || "-";
+document.getElementById("lastOver").textContent = data.lastOver || "-";
+document.getElementById("partnership").textContent = data.partnership || "-";
+document.getElementById("matchPhase").textContent = data.matchPhase || "";
+document.getElementById("toss").textContent = data.toss || "";
+
     const data = snapshot.data();
 
     document.getElementById("team1").textContent = data.team1 || "";
