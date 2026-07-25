@@ -1,110 +1,105 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
 
+body{
+    background:transparent;
+}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+.scoreboard{
+    width:1200px;
+    margin:20px auto;
+}
 
-<title>OBS Cricket Scoreboard</title>
+.top-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#111;
+    border:3px solid #ffffff;
+}
 
-<link rel="stylesheet" href="style.css">
-</head>
+.team{
+    width:35%;
+    color:#fff;
+    text-align:center;
+    font-size:38px;
+    font-weight:bold;
+    padding:18px;
+    text-transform:uppercase;
+}
 
-<body>
+.left{
+    background:#0048ff;
+}
 
-<div class="scoreboard">
+.right{
+    background:#d50000;
+}
 
-    <div class="top-bar">
+.score-box{
+    width:30%;
+    background:#111;
+    color:#fff;
+    text-align:center;
+    padding:15px;
+}
 
-        <div class="team left">
-            <div id="team1">Pakistan</div>
-        </div>
+.score{
+    font-size:55px;
+    font-weight:bold;
+    color:#ffe600;
+}
 
-        <div class="score-box">
+.overs{
+    font-size:24px;
+    margin-top:8px;
+}
 
-            <div class="score">
-                <span id="runs">0</span>/<span id="wickets">0</span>
-            </div>
+.middle{
+    display:flex;
+    background:#222;
+}
 
-            <div class="overs">
-                (<span id="overs">0.0</span> Overs)
-            </div>
+.player{
+    width:50%;
+    color:#fff;
+    text-align:center;
+    border:1px solid #444;
+    padding:18px;
+}
 
-        </div>
+.title{
+    color:#ffe600;
+    font-size:20px;
+    margin-bottom:8px;
+}
 
-        <div class="team right">
-            <div id="team2">West Indies</div>
-        </div>
+.player div:nth-child(2){
+    font-size:28px;
+    font-weight:bold;
+}
 
-    </div>
+.player div:nth-child(3){
+    margin-top:8px;
+    font-size:24px;
+}
 
+.bottom{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    background:#000;
+    color:#fff;
+    font-size:22px;
+    padding:15px;
+    border-top:3px solid gold;
+}
 
-    <div class="middle">
-
-        <div class="player">
-
-            <div class="title">
-                Batsman 1
-            </div>
-
-            <div id="batsman1">
-                Babar Azam
-            </div>
-
-            <div id="batsman1Runs">
-                0 (0)
-            </div>
-
-        </div>
-
-
-        <div class="player">
-
-            <div class="title">
-                Batsman 2
-            </div>
-
-            <div id="batsman2">
-                Muhammad Rizwan
-            </div>
-
-            <div id="batsman2Runs">
-                0 (0)
-            </div>
-
-        </div>
-
-    </div>
-
-
-    <div class="bottom">
-
-        <div>
-            Bowler :
-            <span id="bowler"></span>
-        </div>
-
-        <div>
-            Figures :
-            <span id="bowlerFigures"></span>
-        </div>
-
-        <div>
-            Target :
-            <span id="target"></span>
-        </div>
-
-        <div>
-            Status :
-            <span id="status"></span>
-        </div>
-
-    </div>
-
-</div>
-
-<script type="module" src="script.js"></script>
-
-</body>
-</html>
+.bottom span{
+    color:#ffe600;
+    font-weight:bold;
+}
