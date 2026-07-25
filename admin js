@@ -1,0 +1,33 @@
+function saveScore() {
+
+    const scoreData = {
+        team1: document.getElementById("team1").value,
+        team2: document.getElementById("team2").value,
+        runs: document.getElementById("runs").value,
+        wickets: document.getElementById("wickets").value,
+        overs: document.getElementById("overs").value,
+        target: document.getElementById("target").value
+    };
+
+    localStorage.setItem("cricketScore", JSON.stringify(scoreData));
+
+    alert("Scoreboard Updated Successfully!");
+}
+
+// Load existing values
+window.onload = function () {
+
+    const data = JSON.parse(localStorage.getItem("cricketScore"));
+
+    if(data){
+
+        document.getElementById("team1").value = data.team1;
+        document.getElementById("team2").value = data.team2;
+        document.getElementById("runs").value = data.runs;
+        document.getElementById("wickets").value = data.wickets;
+        document.getElementById("overs").value = data.overs;
+        document.getElementById("target").value = data.target;
+
+    }
+
+}
