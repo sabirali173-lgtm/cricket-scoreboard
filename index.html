@@ -1,32 +1,107 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Live Cricket Scoreboard</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>OBS Cricket Scoreboard</title>
+
+<link rel="stylesheet" href="style.css">
 </head>
+
 <body>
 
-<div id="scoreboard">
-  <h1><span id="team1">Team 1</span> vs <span id="team2">Team 2</span></h1>
+<div class="scoreboard">
 
-  <h2>
-    <span id="runs">0</span>/<span id="wickets">0</span>
-    (<span id="overs">0</span> Overs)
-  </h2>
+    <div class="top-bar">
 
-  <h3>
-    <span id="batsman1"></span> &
-    <span id="batsman2"></span>
-  </h3>
+        <div class="team left">
+            <div id="team1">Pakistan</div>
+        </div>
 
-  <h4>Bowler: <span id="bowler"></span></h4>
+        <div class="score-box">
 
-  <h4>Target: <span id="target"></span></h4>
+            <div class="score">
+                <span id="runs">0</span>/<span id="wickets">0</span>
+            </div>
 
-  <h4>Status: <span id="status"></span></h4>
+            <div class="overs">
+                (<span id="overs">0.0</span> Overs)
+            </div>
+
+        </div>
+
+        <div class="team right">
+            <div id="team2">West Indies</div>
+        </div>
+
+    </div>
+
+
+    <div class="middle">
+
+        <div class="player">
+
+            <div class="title">
+                Batsman 1
+            </div>
+
+            <div id="batsman1">
+                Babar Azam
+            </div>
+
+            <div id="batsman1Runs">
+                0 (0)
+            </div>
+
+        </div>
+
+
+        <div class="player">
+
+            <div class="title">
+                Batsman 2
+            </div>
+
+            <div id="batsman2">
+                Muhammad Rizwan
+            </div>
+
+            <div id="batsman2Runs">
+                0 (0)
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="bottom">
+
+        <div>
+            Bowler :
+            <span id="bowler"></span>
+        </div>
+
+        <div>
+            Figures :
+            <span id="bowlerFigures"></span>
+        </div>
+
+        <div>
+            Target :
+            <span id="target"></span>
+        </div>
+
+        <div>
+            Status :
+            <span id="status"></span>
+        </div>
+
+    </div>
+
 </div>
 
 <script type="module" src="script.js"></script>
