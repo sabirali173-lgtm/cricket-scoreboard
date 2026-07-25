@@ -27,4 +27,10 @@ onSnapshot(scoreRef, (snapshot) => {
 
     document.getElementById("target").textContent = data.target || "";
     document.getElementById("status").textContent = data.status || "";
+
+    document.getElementById("batsman1Runs").textContent = data.batsman1Runs || "0 (0)";
+    document.getElementById("batsman2Runs").textContent = data.batsman2Runs || "0 (0)";
+    
+    document.getElementById("bowlerFigures").textContent = data.bowlerFigures || "-";
+    document.getElementById("crr").textContent = data.crr || "0.00";
 });
