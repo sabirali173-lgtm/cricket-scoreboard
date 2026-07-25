@@ -1,60 +1,20 @@
-function updateScoreboard() {
+import { db, doc, onSnapshot } from "./firebase.js";
 
-    const data = JSON.parse(localStorage.getItem("cricketScore"));
+const scoreRef = doc(db, "scoreboard", "live");
 
-    if (!data) return;
+onSnapshot(scoreRef, (snapshot) => {
+  if (!snapshot.exists()) return;
 
-    // Team Names
-    document.getElementById("team1Name").innerText = data.team1 || "PAKISTAN";
-    document.getElementById("team2Name").innerText = data.team2 || "WEST INDIES";
+  const data = snapshot.data();
 
-    // Score
-    document.getElementById("runs").innerText =
-        `${data.runs}/${data.wickets}`;
-
-    // Overs
-    document.getElementById("overs").innerText =
-        `Overs ${data.overs}`;
-
-    // Target
-    document.getElementById("target").innerText =
-        data.target;
-
-    // Current Run Rate
-    let overs = parseFloat(data.overs);
-
-    if (!isNaN(overs) && overs > 0) {
-        let crr = (parseInt(data.runs) / overs).toFixed(2);
-        document.getElementById("crr").innerText = crr;
-    } else {
-        document.getElementById("crr").innerText = "0.00";
-    }
-
-    // Required Run Rate
-    let target = parseInt(data.target);
-
-    if (!isNaN(target) && !isNaN(overs) && overs < 20) {
-
-        let ballsLeft = (20 - overs) * 6;
-
-        if (ballsLeft > 0) {
-
-            let runsNeeded = target - parseInt(data.runs);
-
-            let rrr = ((runsNeeded / ballsLeft) * 6).toFixed(2);
-
-            if (rrr < 0) rrr = "0.00";
-
-            document.getElementById("rrr").innerText = rrr;
-
-        }
-
-    }
-
-}
-
-// First Load
-updateScoreboard();
-
-// Auto Refresh every second
-setInterval(updateScoreboard, 1000);
+  document.getElementById("team1").textContent = data.team1;
+  document.getElementById("team2").textContent = data.team2;
+  document.getElementById("runs").textContent = data.runs;
+  document.getElementById("wickets").textContent = data.wickets;
+  document.getElementById("overs").textContent = data.overs;
+  document.getElementById("batsman1").textContent = data.batsman1;
+  document.getElementById("batsman2").textContent = data.batsman2;
+  document.getElementById("bowler").textContent = data.bowler;
+  document.getElementById("target").textContent = data.target;
+  document.getElementById("status").textContent = data.status;
+});
