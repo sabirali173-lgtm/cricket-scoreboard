@@ -143,5 +143,24 @@ body{
 .extra-info span{
     color:#00ff66;
     font-weight:bold;
+
+    /* EXTRA INFO BAR */
+
+.extra-info{
+    display:flex;
+    justify-content:space-around;
+    align-items:center;
+    flex-wrap:wrap;
+    background:#111;
+    color:#fff;
+    border-top:2px solid #444;
+    padding:12px;
+    font-size:18px;
+}
+
+.extra-info span{
+    color:#00ff66;
+    font-weight:bold;
+}
 }
 }
