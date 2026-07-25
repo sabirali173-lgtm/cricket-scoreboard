@@ -6,6 +6,7 @@ onSnapshot(scoreRef, (snapshot) => {
     if (!snapshot.exists()) return;
 
     const data = snapshot.data();
+    console.log(data);
 
     // Teams
     document.getElementById("team1").textContent = data.team1 || "";
