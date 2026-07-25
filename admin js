@@ -1,33 +1,23 @@
-function saveScore() {
+import { db, doc, onSnapshot } from "./firebase.js";
 
-    const scoreData = {
-        team1: document.getElementById("team1").value,
-        team2: document.getElementById("team2").value,
-        runs: document.getElementById("runs").value,
-        wickets: document.getElementById("wickets").value,
-        overs: document.getElementById("overs").value,
-        target: document.getElementById("target").value
-    };
+const scoreRef = doc(db, "scoreboard", "live");
 
-    localStorage.setItem("cricketScore", JSON.stringify(scoreData));
+onSnapshot(scoreRef, (snapshot) => {
+    if (!snapshot.exists()) return;
 
-    alert("Scoreboard Updated Successfully!");
-}
+    const data = snapshot.data();
 
-// Load existing values
-window.onload = function () {
-
-    const data = JSON.parse(localStorage.getItem("cricketScore"));
-
-    if(data){
-
-        document.getElementById("team1").value = data.team1;
-        document.getElementById("team2").value = data.team2;
-        document.getElementById("runs").value = data.runs;
-        document.getElementById("wickets").value = data.wickets;
-        document.getElementById("overs").value = data.overs;
-        document.getElementById("target").value = data.target;
-
-    }
-
-}
+    document.body.innerHTML = `
+    <div style="width:100%;height:100vh;background:#111;color:#fff;
+    display:flex;justify-content:center;align-items:center;
+    font-family:Arial,sans-serif;font-size:38px;">
+        <div>
+            <h1>${data.team1} ${data.runs}/${data.wickets}</h1>
+            <h2>Overs : ${data.overs}</h2>
+            <h3>${data.batsman1} & ${data.batsman2}</h3>
+            <h4>Bowler : ${data.bowler}</h4>
+            <h4>Target : ${data.target}</h4>
+            <h4>Status : ${data.status}</h4>
+        </div>
+    </div>`;
+});
