@@ -1,20 +1,102 @@
-<div class="score-box">
+<!DOCTYPE html>
+<html lang="en">
 
-    <div class="live">
-        🔴 LIVE
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>OBS Cricket Scoreboard</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="scoreboard">
+
+    <div class="top-bar">
+
+        <div class="team left">
+            <span id="team1">Pakistan</span>
+        </div>
+
+        <div class="score-box">
+
+            <div class="live">🔴 LIVE</div>
+
+            <div class="score">
+                <span id="runs">0</span>/<span id="wickets">0</span>
+            </div>
+
+            <div class="overs">
+                (<span id="overs">0.0</span> Overs)
+            </div>
+
+            <div class="crr">
+                CRR :
+                <span id="crr">0.00</span>
+            </div>
+
+        </div>
+
+        <div class="team right">
+            <span id="team2">West Indies</span>
+        </div>
+
     </div>
 
-    <div class="score">
-        <span id="runs">0</span>/<span id="wickets">0</span>
+    <div class="middle">
+
+        <div class="player">
+
+            <div class="title">Batsman 1</div>
+
+            <div id="batsman1">Babar Azam</div>
+
+            <div id="batsman1Runs">0 (0)</div>
+
+        </div>
+
+        <div class="player">
+
+            <div class="title">Batsman 2</div>
+
+            <div id="batsman2">Muhammad Rizwan</div>
+
+            <div id="batsman2Runs">0 (0)</div>
+
+        </div>
+
     </div>
 
-    <div class="overs">
-        (<span id="overs">0.0</span> Overs)
-    </div>
+    <div class="bottom">
 
-    <div class="crr">
-        CRR :
-        <span id="crr">0.00</span>
+        <div>
+            Bowler :
+            <span id="bowler"></span>
+        </div>
+
+        <div>
+            Figures :
+            <span id="bowlerFigures"></span>
+        </div>
+
+        <div>
+            Target :
+            <span id="target"></span>
+        </div>
+
+        <div>
+            Status :
+            <span id="status"></span>
+        </div>
+
     </div>
 
 </div>
+
+<script type="module" src="script.js"></script>
+
+</body>
+</html>
