@@ -40,4 +40,10 @@ document.getElementById("toss").textContent = data.toss || "";
     
     document.getElementById("bowlerFigures").textContent = data.bowlerFigures || "-";
     document.getElementById("crr").textContent = data.crr || "0.00";
+
+    document.getElementById("rrr").textContent = data.rrr || "0.00";
+document.getElementById("lastOver").textContent = data.lastOver || "-";
+document.getElementById("partnership").textContent = data.partnership || "-";
+document.getElementById("matchPhase").textContent = data.matchPhase || "-";
+document.getElementById("toss").textContent = data.toss || "-";
 });
