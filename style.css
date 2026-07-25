@@ -1,106 +1,24 @@
-
-*{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-    font-family:Arial, Helvetica, sans-serif;
-}
-
-body{
-    background:transparent;
-}
-
-.scoreboard{
-    width:1200px;
-    margin:20px auto;
-}
-
-.top-bar{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    background:#111;
-    border:3px solid #ffffff;
-}
-
-.team{
-    width:35%;
-    color:#fff;
-    text-align:center;
-    font-size:38px;
-    font-weight:bold;
-    padding:18px;
-    text-transform:uppercase;
-}
-
-.left{
-    background:#0048ff;
-}
-
-.right{
-    background:#d50000;
-}
-
-.score-box{
-    width:30%;
-    background:#111;
-    color:#fff;
-    text-align:center;
-    padding:15px;
-}
-
-.score{
-    font-size:55px;
-    font-weight:bold;
-    color:#ffe600;
-}
-
-.overs{
-    font-size:24px;
-    margin-top:8px;
-}
-
-.middle{
-    display:flex;
-    background:#222;
-}
-
-.player{
-    width:50%;
-    color:#fff;
-    text-align:center;
-    border:1px solid #444;
-    padding:18px;
-}
-
-.title{
-    color:#ffe600;
-    font-size:20px;
-    margin-bottom:8px;
-}
-
-.player div:nth-child(2){
-    font-size:28px;
-    font-weight:bold;
-}
-
-.player div:nth-child(3){
-    margin-top:8px;
-    font-size:24px;
-}
-
-.bottom{
-    display:flex;
-    justify-content:space-around;
-    align-items:center;
-    background:#000;
-    color:#fff;
+.live{
+    color:#ff2d2d;
     font-size:22px;
-    padding:15px;
-    border-top:3px solid gold;
+    font-weight:bold;
+    margin-bottom:10px;
+    animation:blink 1s infinite;
 }
 
-.bottom span{
-    color:#ffe600;
+@keyframes blink{
+    50%{
+        opacity:0;
+    }
+}
+
+.crr{
+    color:#ffffff;
+    font-size:20px;
+    margin-top:10px;
+}
+
+.crr span{
+    color:#00ff66;
     font-weight:bold;
 }
