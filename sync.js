@@ -37,19 +37,14 @@ async function saveLiveMatches() {
     return;
   }
 
-  // Keep only live / ongoing matches
-  const liveMatches = (json.data || []).filter(match => {
-    const status = (match.status || "").toLowerCase();
+ // Save all matches returned by CricAPI
+const liveMatches = (json.data || []).filter(match => {
 
-    return (
-      !status.includes("won") &&
-      !status.includes("match ended") &&
-      !status.includes("stumps") &&
-      !status.includes("abandoned") &&
-      !status.includes("cancelled") &&
-      !status.includes("drawn")
-    );
-  });
+  if (!match.id) return false;
+
+  return true;
+
+});
 
   await db.collection("scoreboard").doc("matches").set({
     list: liveMatches.map(match => ({
@@ -61,8 +56,15 @@ async function saveLiveMatches() {
     updated: new Date().toISOString(),
   });
 
-  console.log(`✅ ${liveMatches.length} LIVE matches saved to Firebase`);
-}
+  console.log("================================");
+console.log("Matches Returned:", json.data.length);
+console.log("Matches Saved:", liveMatches.length);
+
+liveMatches.forEach(m => {
+  console.log(m.name, "|", m.status);
+});
+
+console.log("================================");
 
 // ===============================
 // Sync Selected Match Score
