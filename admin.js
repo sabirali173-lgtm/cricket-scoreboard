@@ -1,15 +1,14 @@
+// ===============================
+// Load Matches From Firebase
+// ===============================
 import {
   db,
   doc,
+  getDoc,
   setDoc,
   updateDoc
 } from "./firebase.js";
 
-const API_KEY = "82fd1839-3089-4d0b-b466-8387599932f1";
-
-// ===============================
-// Load Live Matches
-// ===============================
 async function loadMatches() {
 
   try {
@@ -18,26 +17,21 @@ async function loadMatches() {
 
     if (btn) btn.innerText = "Loading...";
 
-    const response = await fetch(
-      `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}&offset=0`
-    );
+    const snap = await getDoc(doc(db, "scoreboard", "matches"));
 
-    const json = await response.json();
-
-    console.log(json);
-
-    if (json.status === "failure") {
-      alert(json.reason || "Invalid API Key");
-
-      if (btn) btn.innerText = "Load Live Matches";
+    if (!snap.exists()) {
+      alert("No matches found. Run GitHub Sync first.");
+      if (btn) btn.innerText = "Refresh Matches";
       return;
     }
+
+    const matches = snap.data().list || [];
 
     const select = document.getElementById("matchSelect");
 
     select.innerHTML = "";
 
-    json.data.forEach(match => {
+    matches.forEach(match => {
 
       const option = document.createElement("option");
 
@@ -61,81 +55,3 @@ async function loadMatches() {
   }
 
 }
-
-// ===============================
-// Save Selected Match
-// ===============================
-async function saveMatch() {
-
-  try {
-
-    const matchId =
-      document.getElementById("matchSelect").value;
-
-    await setDoc(
-      doc(db, "scoreboard", "settings"),
-      {
-        selectedMatchId: matchId
-      },
-      {
-        merge: true
-      }
-    );
-
-    alert("✅ Match Saved");
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("Failed to Save Match");
-
-  }
-
-}
-
-// ===============================
-// Manual Score Update
-// ===============================
-async function saveScore() {
-
-  try {
-
-    const data = {
-
-      team1: document.getElementById("team1").value,
-
-      team2: document.getElementById("team2").value,
-
-      runs: Number(document.getElementById("runs").value),
-
-      wickets: Number(document.getElementById("wickets").value),
-
-      overs: document.getElementById("overs").value,
-
-      target: Number(document.getElementById("target").value),
-
-      updated: new Date().toISOString()
-
-    };
-
-    await updateDoc(
-      doc(db, "scoreboard", "live"),
-      data
-    );
-
-    alert("✅ Score Updated");
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("Unable to Update Score");
-
-  }
-
-}
-
-window.loadMatches = loadMatches;
-window.saveMatch = saveMatch;
-window.saveScore = saveScore;
