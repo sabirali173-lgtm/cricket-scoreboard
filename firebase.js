@@ -1,15 +1,16 @@
-
 // Firebase SDK
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
-  onSnapshot,
-  updateDoc
+  setDoc,
+  updateDoc,
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Your Firebase Config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCoqYoEqgPiMVnsC2xeARhyDdfOYPWwiLM",
   authDomain: "obs-cricket-scoreboard.firebaseapp.com",
@@ -23,4 +24,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-export { db, doc, getDoc, onSnapshot, updateDoc };
+export {
+  db,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  onSnapshot
+};
