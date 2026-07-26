@@ -54,6 +54,10 @@ async function saveLiveMatches() {
 
 });
 
+  console.log(JSON.stringify(json, null, 2));
+console.log("Total Matches:", json.data?.length);
+console.log("Live Matches:", liveMatches.length);
+
   await db.collection("scoreboard").doc("matches").set({
     list: liveMatches.map(match => ({
       id: match.id,
