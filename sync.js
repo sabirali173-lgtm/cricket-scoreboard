@@ -64,6 +64,15 @@ async function syncScore() {
       updated: new Date().toISOString(),
     };
 
+    console.log("===== SCOREBOARD =====");
+console.log(JSON.stringify(scoreboard, null, 2));
+
+await db.collection("scoreboard").doc("live").set(scoreboard, {
+  merge: true,
+});
+
+console.log("Firebase Write Success");
+
     await db.collection("scoreboard").doc("live").set(scoreboard, {
       merge: true,
     });
