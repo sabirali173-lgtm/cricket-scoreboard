@@ -17,18 +17,21 @@ async function syncScore() {
     const res = await fetch(url);
     const json = await res.json();
 
+    console.log("========== FULL API RESPONSE ==========");
+    console.log(JSON.stringify(json, null, 2));
+
     if (!json.data) {
       console.log("No match data found");
       return;
     }
 
-    console.log(JSON.stringify(json, null, 2));
-console.log(match?.score);
-
     const match = json.data;
 
-    console.log(JSON.stringify(json, null, 2));
-return;
+    console.log("========== MATCH ==========");
+    console.log(JSON.stringify(match, null, 2));
+
+    console.log("========== SCORE ==========");
+    console.log(JSON.stringify(match.score, null, 2));
 
     const scoreboard = {
       team1: match.t1 || "",
@@ -37,24 +40,29 @@ return;
       team2Logo: match.t2img || "",
       status: match.status || "",
       series: match.series || "",
-      score: match.score || [],
       updated: new Date().toISOString(),
     };
 
-    if (match.score && match.score.length > 0) {
+    if (Array.isArray(match.score) && match.score.length > 0) {
       const innings = match.score[match.score.length - 1];
 
-      scoreboard.runs = innings.r || 0;
-      scoreboard.wickets = innings.w || 0;
-      scoreboard.overs = innings.o || 0;
+      scoreboard.runs = innings.r ?? 0;
+      scoreboard.wickets = innings.w ?? 0;
+      scoreboard.overs = innings.o ?? 0;
+
+      console.log("Runs:", scoreboard.runs);
+      console.log("Wickets:", scoreboard.wickets);
+      console.log("Overs:", scoreboard.overs);
     }
 
     await db.collection("scoreboard").doc("live").set(scoreboard, {
       merge: true,
     });
 
-    console.log("Score updated successfully");
+    console.log("✅ Score updated successfully");
+
   } catch (err) {
+    console.error("ERROR:");
     console.error(err);
     process.exit(1);
   }
