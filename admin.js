@@ -5,37 +5,37 @@ import {
   updateDoc
 } from "./firebase.js";
 
-// ===============================
-// CHANGE THIS
-// ===============================
-const API_KEY = "YOUR_CRICAPI_KEY_HERE";
-// Example:
-// const API_KEY = "82fd1839-3089-4d0b-b466-8387599932f1";
+const API_KEY = "82fd1839-3089-4d0b-b466-8387599932f1";
 
 // ===============================
 // Load Live Matches
 // ===============================
 async function loadMatches() {
+
   try {
+
     const btn = document.querySelector("button");
+
     if (btn) btn.innerText = "Loading...";
 
-    const res = await fetch(
+    const response = await fetch(
       `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}&offset=0`
     );
 
-    const json = await res.json();
+    const json = await response.json();
 
-    const select = document.getElementById("matchSelect");
+    console.log(json);
 
-    select.innerHTML = "";
-
-    if (json.status !== "success") {
-      alert(json.reason || "Unable to load matches");
+    if (json.status === "failure") {
+      alert(json.reason || "Invalid API Key");
 
       if (btn) btn.innerText = "Load Live Matches";
       return;
     }
+
+    const select = document.getElementById("matchSelect");
+
+    select.innerHTML = "";
 
     json.data.forEach(match => {
 
@@ -44,7 +44,7 @@ async function loadMatches() {
       option.value = match.id;
 
       option.text =
-        `${match.name} (${match.status})`;
+        `${match.name} | ${match.status}`;
 
       select.appendChild(option);
 
@@ -59,6 +59,7 @@ async function loadMatches() {
     alert("Unable to load matches");
 
   }
+
 }
 
 // ===============================
@@ -81,20 +82,20 @@ async function saveMatch() {
       }
     );
 
-    alert("✅ Match Selected Successfully");
+    alert("✅ Match Saved");
 
   } catch (err) {
 
     console.error(err);
 
-    alert("Error Saving Match");
+    alert("Failed to Save Match");
 
   }
 
 }
 
 // ===============================
-// Manual Scoreboard Update
+// Manual Score Update
 // ===============================
 async function saveScore() {
 
@@ -135,10 +136,6 @@ async function saveScore() {
 
 }
 
-// ===============================
-
 window.loadMatches = loadMatches;
-
 window.saveMatch = saveMatch;
-
 window.saveScore = saveScore;
