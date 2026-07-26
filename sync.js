@@ -12,71 +12,77 @@ const db = admin.firestore();
 // Read Selected Match ID
 // ===============================
 async function getSelectedMatchId() {
-  const docRef = await db.collection("scoreboard").doc("settings").get();
+
+  const docRef = await db
+    .collection("scoreboard")
+    .doc("settings")
+    .get();
 
   if (!docRef.exists) {
     throw new Error("settings document not found");
   }
 
   return docRef.data().selectedMatchId;
+
 }
 
 // ===============================
-// Save Live Matches
+// Load Matches From CricAPI
 // ===============================
 async function saveLiveMatches() {
 
-  const url = `https://api.cricapi.com/v1/matches?apikey=${process.env.API_KEY}`;
+  const url =
+    `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
 
-  console.log("Fetching matches...");
+  console.log("Fetching Live Matches...");
 
   const res = await fetch(url);
   const json = await res.json();
 
   if (json.status !== "success") {
+
     console.log("API Error:", json.reason);
     return;
+
   }
 
-  const liveMatches = (json.data || []).filter(match => {
+  const matches = (json.data || []).map(match => ({
 
-  const status = (match.status || "").toLowerCase();
+    id: match.id,
 
-  return (
-    match.id &&
-    !status.includes("won") &&
-    !status.includes("match ended") &&
-    !status.includes("stumps") &&
-    !status.includes("abandoned") &&
-    !status.includes("cancelled") &&
-    !status.includes("draw")
-  );
+    name: match.name,
 
-});
+    status: match.status,
 
-  console.log(JSON.stringify(json, null, 2));
-console.log("Total Matches:", json.data?.length);
-console.log("Live Matches:", liveMatches.length);
+    matchType: match.matchType || "",
+
+    team1: match.teams?.[0] || "",
+
+    team2: match.teams?.[1] || "",
+
+    date: match.date || ""
+
+  }));
 
   await db.collection("scoreboard").doc("matches").set({
-    list: liveMatches.map(match => ({
-      id: match.id,
-      name: match.name,
-      status: match.status,
-      matchType: match.matchType || "",
-      date: match.date || ""
-    })),
+
+    list: matches,
+
     updated: new Date().toISOString()
+
   });
 
   console.log("================================");
-  console.log("Live Matches Found:", liveMatches.length);
+  console.log("Matches Returned:", matches.length);
 
-  liveMatches.forEach(match => {
-    console.log(match.name + " | " + match.status);
+  matches.forEach(m => {
+
+    console.log(`${m.name} | ${m.status}`);
+
   });
 
   console.log("================================");
+
 }
 
 // ===============================
@@ -97,27 +103,26 @@ async function syncScore() {
     const url =
       `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
-    console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
+    console.log(
+      "Fetching:",
+      url.replace(process.env.API_KEY, "***")
+    );
 
     const response = await fetch(url);
+
     const json = await response.json();
 
-    console.log("===== API RESPONSE =====");
-    console.log(JSON.stringify(json, null, 2));
-
     if (json.status !== "success") {
-      console.log("API Error:", json.reason);
-      return;
-    }
 
-    if (!json.data) {
-      console.log("No Match Data");
+      console.log("API Error:", json.reason);
+
       return;
+
     }
 
     const match = json.data;
 
-    let runs = 0;
+      let runs = 0;
     let wickets = 0;
     let overs = 0;
 
@@ -141,8 +146,9 @@ async function syncScore() {
       team1Logo: match.teamInfo?.[0]?.img || "",
       team2Logo: match.teamInfo?.[1]?.img || "",
 
-      status: match.status || "",
       match: match.name || "",
+      status: match.status || "",
+
       venue: match.venue || "",
 
       tossWinner: match.tossWinner || "",
@@ -153,13 +159,38 @@ async function syncScore() {
       wickets,
       overs,
 
+      target: match.target || "",
+
+      batsman1: "",
+      batsman1Runs: "",
+
+      batsman2: "",
+      batsman2Runs: "",
+
+      bowler: "",
+      bowlerFigures: "",
+
+      crr: "",
+      rrr: "",
+
+      lastOver: "",
+      partnership: "",
+
+      matchPhase: "",
+
       updated: new Date().toISOString()
 
     };
 
-    await db.collection("scoreboard").doc("live").set(scoreboard, {
-      merge: true
-    });
+    console.log("===== SCOREBOARD =====");
+    console.log(JSON.stringify(scoreboard, null, 2));
+
+    await db
+      .collection("scoreboard")
+      .doc("live")
+      .set(scoreboard, {
+        merge: true,
+      });
 
     console.log("================================");
     console.log("Firebase Updated Successfully");
