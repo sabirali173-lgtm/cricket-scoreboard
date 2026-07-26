@@ -26,17 +26,45 @@ async function getSelectedMatchId() {
 // ===============================
 async function saveLiveMatches() {
 
-  const url = `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
+  const url = `https://api.cricapi.com/v1/matches?apikey=${process.env.API_KEY}`;
 
-  console.log("Fetching live matches...");
+  console.log("Fetching matches...");
 
   const res = await fetch(url);
   const json = await res.json();
 
   if (json.status !== "success") {
-    console.log("Unable to load matches:", json.reason);
+    console.log("API Error:", json.reason);
     return;
   }
+
+  // Sirf live matches
+  const liveMatches = (json.data || []).filter(match => {
+    return match.matchStarted === true && match.matchEnded === false;
+  });
+
+  await db.collection("scoreboard").doc("matches").set({
+    list: liveMatches.map(match => ({
+      id: match.id,
+      name: match.name,
+      status: match.status,
+      matchType: match.matchType || "",
+      date: match.date || ""
+    })),
+    updated: new Date().toISOString()
+  });
+
+  console.log("================================");
+  console.log("Live Matches Found:", liveMatches.length);
+
+  liveMatches.forEach(match => {
+    console.log(match.name);
+    console.log(match.status);
+    console.log("------------------------");
+  });
+
+  console.log("================================");
+}
 
   const liveMatches = (json.data || []).filter(match => match.id);
 
