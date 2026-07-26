@@ -32,6 +32,37 @@ async function syncScore() {
 
     console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
 
+    // ===============================
+// Save Current Matches List
+// ===============================
+const matchesResponse = await fetch(
+  `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`
+);
+
+const matchesJson = await matchesResponse.json();
+
+if (matchesJson.status === "success") {
+
+  await db.collection("scoreboard").doc("matches").set({
+
+    list: matchesJson.data.map(match => ({
+
+      id: match.id,
+
+      name: match.name,
+
+      status: match.status
+
+    })),
+
+    updated: new Date().toISOString()
+
+  });
+
+  console.log("✅ Live Matches Saved to Firebase");
+
+}
+
     const response = await fetch(url);
     const json = await response.json();
 
