@@ -27,6 +27,8 @@ async function syncScore() {
 
     const match = json.data;
 
+    console.log(JSON.stringify(match, null, 2));
+
     console.log("========== MATCH ==========");
     console.log(JSON.stringify(match, null, 2));
 
