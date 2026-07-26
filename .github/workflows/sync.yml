@@ -10,14 +10,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - run: npm install
+      - name: Install Dependencies
+        run: npm install
 
-      - run: node sync.js
+      - name: Run Live Sync
+        run: node sync.js
         env:
-          API_KEY: ${{ secrets.API_KEY }}
+          API_KEY: ${{ secrets.CRICKET_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
