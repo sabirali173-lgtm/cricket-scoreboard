@@ -8,17 +8,25 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const MATCH_ID = "a2cdbdde-a120-43f2-8089-fba847d42ab3";
+// 👇 Current Live Match ID
+const MATCH_ID = "ea479cff-ddbe-48e0-9e4a-528f61a8a175";
 
 async function syncScore() {
   try {
     const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
-    const res = await fetch(url);
-    const json = await res.json();
+    console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
 
-    console.log("========== FULL API RESPONSE ==========");
+    const response = await fetch(url);
+    const json = await response.json();
+
+    console.log("===== API RESPONSE =====");
     console.log(JSON.stringify(json, null, 2));
+
+    if (json.status === "failure") {
+      console.log("API Error:", json.reason);
+      return;
+    }
 
     if (!json.data) {
       console.log("No match data found");
@@ -27,13 +35,17 @@ async function syncScore() {
 
     const match = json.data;
 
-    console.log(JSON.stringify(match, null, 2));
+    let runs = 0;
+    let wickets = 0;
+    let overs = 0;
 
-    console.log("========== MATCH ==========");
-    console.log(JSON.stringify(match, null, 2));
+    if (Array.isArray(match.score) && match.score.length > 0) {
+      const innings = match.score[match.score.length - 1];
 
-    console.log("========== SCORE ==========");
-    console.log(JSON.stringify(match.score, null, 2));
+      runs = innings.r || 0;
+      wickets = innings.w || 0;
+      overs = innings.o || 0;
+    }
 
     const scoreboard = {
       team1: match.t1 || "",
@@ -42,29 +54,27 @@ async function syncScore() {
       team2Logo: match.t2img || "",
       status: match.status || "",
       series: match.series || "",
+      match: match.name || "",
+      venue: match.venue || "",
+
+      runs,
+      wickets,
+      overs,
+
       updated: new Date().toISOString(),
     };
-
-    if (Array.isArray(match.score) && match.score.length > 0) {
-      const innings = match.score[match.score.length - 1];
-
-      scoreboard.runs = innings.r ?? 0;
-      scoreboard.wickets = innings.w ?? 0;
-      scoreboard.overs = innings.o ?? 0;
-
-      console.log("Runs:", scoreboard.runs);
-      console.log("Wickets:", scoreboard.wickets);
-      console.log("Overs:", scoreboard.overs);
-    }
 
     await db.collection("scoreboard").doc("live").set(scoreboard, {
       merge: true,
     });
 
-    console.log("✅ Score updated successfully");
-
+    console.log("================================");
+    console.log("Firebase Updated Successfully");
+    console.log("Runs:", runs);
+    console.log("Wickets:", wickets);
+    console.log("Overs:", overs);
+    console.log("================================");
   } catch (err) {
-    console.error("ERROR:");
     console.error(err);
     process.exit(1);
   }
