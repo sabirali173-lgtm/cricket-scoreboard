@@ -2,7 +2,7 @@ import { db, doc, onSnapshot } from "./firebase.js";
 
 const scoreRef = doc(db, "scoreboard", "live");
 
-// TEAM LOGOS
+// Local fallback logos
 const teamLogos = {
     "Pakistan": "images/teams/pakistan.png",
     "India": "images/teams/india.png",
@@ -19,88 +19,111 @@ const teamLogos = {
     "Netherlands": "images/teams/netherlands.png"
 };
 
+function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.textContent = value ?? "";
+    }
+}
+
+function setImage(id, src) {
+    const img = document.getElementById(id);
+    if (img && src) {
+        img.src = src;
+    }
+}
+
 onSnapshot(scoreRef, (snapshot) => {
 
     if (!snapshot.exists()) return;
 
     const data = snapshot.data();
-    console.log(data);
 
+    console.log("LIVE SCORE:", data);
+
+    // ===========================
     // Teams
-    document.getElementById("team1").textContent = data.team1 || "";
-    document.getElementById("team2").textContent = data.team2 || "";
+    // ===========================
+    setText("team1", data.team1 || "");
+    setText("team2", data.team2 || "");
 
+    // ===========================
     // Team Logos
-    if (document.getElementById("team1Logo")) {
-        document.getElementById("team1Logo").src =
-            teamLogos[data.team1] || "";
-    }
+    // ===========================
+    setImage(
+        "team1Logo",
+        data.team1Logo ||
+        teamLogos[data.team1] ||
+        ""
+    );
 
-    if (document.getElementById("team2Logo")) {
-        document.getElementById("team2Logo").src =
-            teamLogos[data.team2] || "";
-    }
+    setImage(
+        "team2Logo",
+        data.team2Logo ||
+        teamLogos[data.team2] ||
+        ""
+    );
 
+    // ===========================
     // Score
-    document.getElementById("runs").textContent = data.runs || 0;
-    document.getElementById("wickets").textContent = data.wickets || 0;
-    document.getElementById("overs").textContent = data.overs || "0.0";
+    // ===========================
+    setText("runs", data.runs ?? 0);
+    setText("wickets", data.wickets ?? 0);
+    setText("overs", data.overs ?? "0.0");
 
-    // Run Rates
-    document.getElementById("crr").textContent =
-        data.CRR || data.crr || "0.00";
+    // ===========================
+    // Run Rate
+    // ===========================
+    setText("crr", data.crr || data.CRR || "0.00");
+    setText("rrr", data.rrr || data.RRR || "-");
 
-    if (document.getElementById("rrr")) {
-        document.getElementById("rrr").textContent =
-            data.RRR || data.rrr || "-";
-    }
-
+    // ===========================
     // Batsmen
-    document.getElementById("batsman1").textContent =
-        data.batsman1 || "";
+    // ===========================
+    setText("batsman1", data.batsman1 || "-");
+    setText("batsman1Runs", data.batsman1Runs || "0 (0)");
 
-    document.getElementById("batsman1Runs").textContent =
-        data.batsman1Runs || "0 (0)";
+    setText("batsman2", data.batsman2 || "-");
+    setText("batsman2Runs", data.batsman2Runs || "0 (0)");
 
-    document.getElementById("batsman2").textContent =
-        data.batsman2 || "";
-
-    document.getElementById("batsman2Runs").textContent =
-        data.batsman2Runs || "0 (0)";
-
+    // ===========================
     // Bowler
-    document.getElementById("bowler").textContent =
-        data.bowler || "";
+    // ===========================
+    setText("bowler", data.bowler || "-");
+    setText("bowlerFigures", data.bowlerFigures || "-");
 
-    document.getElementById("bowlerFigures").textContent =
-        data.bowlerFigures || "-";
+    // ===========================
+    // Match
+    // ===========================
+    setText("target", data.target || "-");
+    setText("status", data.status || "");
+    setText("match", data.match || "");
+    setText("venue", data.venue || "");
 
-    // Match Info
-    document.getElementById("target").textContent =
-        data.target || "";
+    // ===========================
+    // Toss
+    // ===========================
+    setText(
+        "toss",
+        data.toss ||
+        (data.tossWinner
+            ? `${data.tossWinner} won toss & chose ${data.tossChoice}`
+            : "-")
+    );
 
-    document.getElementById("status").textContent =
-        data.status || "";
+    // ===========================
+    // Match Phase
+    // ===========================
+    setText("matchPhase", data.matchPhase || "-");
 
-    // Extra Info
-    if (document.getElementById("lastOver")) {
-        document.getElementById("lastOver").textContent =
-            data["Last over"] || data.lastOver || "-";
-    }
+    // ===========================
+    // Partnership
+    // ===========================
+    setText("partnership", data.partnership || "-");
 
-    if (document.getElementById("partnership")) {
-        document.getElementById("partnership").textContent =
-            data.Partnership || data.partnership || "-";
-    }
-
-    if (document.getElementById("matchPhase")) {
-        document.getElementById("matchPhase").textContent =
-            data.Matchphase || data.matchPhase || "-";
-    }
-
-    if (document.getElementById("toss")) {
-        document.getElementById("toss").textContent =
-            data.Toss || data.toss || "-";
-    }
+    // ===========================
+    // Last Over
+    // ===========================
+    setText("lastOver", data.lastOver || "-");
 
 });
