@@ -8,14 +8,13 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-// 👇 Current Live Match ID
+// Current Match ID
 const MATCH_ID = "ea479cff-ddbe-48e0-9e4a-528f61a8a175";
 
 async function syncScore() {
   try {
-
     console.log("API KEY LENGTH:", process.env.API_KEY?.length);
-console.log("API KEY:", process.env.API_KEY?.substring(0, 8) + "...");
+
     const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
     console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
@@ -45,18 +44,19 @@ console.log("API KEY:", process.env.API_KEY?.substring(0, 8) + "...");
     if (Array.isArray(match.score) && match.score.length > 0) {
       const innings = match.score[match.score.length - 1];
 
-      runs = innings.r || 0;
-      wickets = innings.w || 0;
-      overs = innings.o || 0;
+      runs = innings.r ?? 0;
+      wickets = innings.w ?? 0;
+      overs = innings.o ?? 0;
     }
 
     const scoreboard = {
-      team1: match.t1 || "",
-      team2: match.t2 || "",
-      team1Logo: match.t1img || "",
-      team2Logo: match.t2img || "",
+      team1: match.teams?.[0] || "",
+      team2: match.teams?.[1] || "",
+
+      team1Logo: match.teamInfo?.[0]?.img || "",
+      team2Logo: match.teamInfo?.[1]?.img || "",
+
       status: match.status || "",
-      series: match.series || "",
       match: match.name || "",
       venue: match.venue || "",
 
@@ -68,24 +68,19 @@ console.log("API KEY:", process.env.API_KEY?.substring(0, 8) + "...");
     };
 
     console.log("===== SCOREBOARD =====");
-console.log(JSON.stringify(scoreboard, null, 2));
-
-await db.collection("scoreboard").doc("live").set(scoreboard, {
-  merge: true,
-});
-
-console.log("Firebase Write Success");
+    console.log(JSON.stringify(scoreboard, null, 2));
 
     await db.collection("scoreboard").doc("live").set(scoreboard, {
       merge: true,
     });
 
     console.log("================================");
-    console.log("Firebase Updated Successfully");
+    console.log("Firebase Write Success");
     console.log("Runs:", runs);
     console.log("Wickets:", wickets);
     console.log("Overs:", overs);
     console.log("================================");
+
   } catch (err) {
     console.error(err);
     process.exit(1);
