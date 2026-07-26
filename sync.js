@@ -8,22 +8,73 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// ===============================
 // Read selected Match ID from Firebase
+// ===============================
 async function getSelectedMatchId() {
-  const doc = await db.collection("scoreboard").doc("settings").get();
+  const docRef = await db.collection("scoreboard").doc("settings").get();
 
-  if (!doc.exists) {
+  if (!docRef.exists) {
     throw new Error("settings document not found");
   }
 
-  return doc.data().selectedMatchId;
+  return docRef.data().selectedMatchId;
 }
 
+// ===============================
+// Save ALL Live Matches to Firebase
+// ===============================
+async function saveLiveMatches() {
+  const url = `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
+
+  console.log("Fetching live matches...");
+
+  const res = await fetch(url);
+  const json = await res.json();
+
+  if (json.status !== "success") {
+    console.log("Unable to load live matches:", json.reason);
+    return;
+  }
+
+  // Keep only live / ongoing matches
+  const liveMatches = (json.data || []).filter(match => {
+    const status = (match.status || "").toLowerCase();
+
+    return (
+      !status.includes("won") &&
+      !status.includes("match ended") &&
+      !status.includes("stumps") &&
+      !status.includes("abandoned") &&
+      !status.includes("cancelled") &&
+      !status.includes("drawn")
+    );
+  });
+
+  await db.collection("scoreboard").doc("matches").set({
+    list: liveMatches.map(match => ({
+      id: match.id,
+      name: match.name,
+      status: match.status,
+      matchType: match.matchType || "",
+    })),
+    updated: new Date().toISOString(),
+  });
+
+  console.log(`✅ ${liveMatches.length} LIVE matches saved to Firebase`);
+}
+
+// ===============================
+// Sync Selected Match Score
+// ===============================
 async function syncScore() {
   try {
     console.log("API KEY LENGTH:", process.env.API_KEY?.length);
 
-    // Get Match ID from Firebase
+    // 1. Save all live matches first
+    await saveLiveMatches();
+
+    // 2. Get selected match from Firebase
     const MATCH_ID = await getSelectedMatchId();
 
     console.log("Selected Match ID:", MATCH_ID);
@@ -31,37 +82,6 @@ async function syncScore() {
     const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
     console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
-
-    // ===============================
-// Save Current Matches List
-// ===============================
-const matchesResponse = await fetch(
-  `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`
-);
-
-const matchesJson = await matchesResponse.json();
-
-if (matchesJson.status === "success") {
-
-  await db.collection("scoreboard").doc("matches").set({
-
-    list: matchesJson.data.map(match => ({
-
-      id: match.id,
-
-      name: match.name,
-
-      status: match.status
-
-    })),
-
-    updated: new Date().toISOString()
-
-  });
-
-  console.log("✅ Live Matches Saved to Firebase");
-
-}
 
     const response = await fetch(url);
     const json = await response.json();
@@ -129,7 +149,6 @@ if (matchesJson.status === "success") {
     console.log("Wickets:", wickets);
     console.log("Overs:", overs);
     console.log("================================");
-
   } catch (err) {
     console.error("ERROR:", err);
     process.exit(1);
