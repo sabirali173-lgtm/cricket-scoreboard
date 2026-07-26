@@ -1,0 +1,24 @@
+name: Sync Cricket Score
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/1 * * * *"
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - run: npm install
+
+      - run: node sync.js
+        env:
+          CRICKET_API_KEY: ${{ secrets.CRICKET_API_KEY }}
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
