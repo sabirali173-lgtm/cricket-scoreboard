@@ -24,6 +24,9 @@ async function syncScore() {
 
     const match = json.data;
 
+    console.log(JSON.stringify(json, null, 2));
+return;
+
     const scoreboard = {
       team1: match.t1 || "",
       team2: match.t2 || "",
