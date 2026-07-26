@@ -9,7 +9,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // ===============================
-// Read selected Match ID
+// Read Selected Match ID
 // ===============================
 async function getSelectedMatchId() {
   const docRef = await db.collection("scoreboard").doc("settings").get();
@@ -22,7 +22,7 @@ async function getSelectedMatchId() {
 }
 
 // ===============================
-// Save Matches To Firebase
+// Save Live Matches
 // ===============================
 async function saveLiveMatches() {
 
@@ -38,7 +38,6 @@ async function saveLiveMatches() {
     return;
   }
 
-  // Sirf live matches
   const liveMatches = (json.data || []).filter(match => {
     return match.matchStarted === true && match.matchEnded === false;
   });
@@ -58,36 +57,10 @@ async function saveLiveMatches() {
   console.log("Live Matches Found:", liveMatches.length);
 
   liveMatches.forEach(match => {
-    console.log(match.name);
-    console.log(match.status);
-    console.log("------------------------");
+    console.log(match.name + " | " + match.status);
   });
 
   console.log("================================");
-}
-
-  const liveMatches = (json.data || []).filter(match => match.id);
-
-  await db.collection("scoreboard").doc("matches").set({
-    list: liveMatches.map(match => ({
-      id: match.id,
-      name: match.name,
-      status: match.status,
-      matchType: match.matchType || ""
-    })),
-    updated: new Date().toISOString()
-  });
-
-  console.log("================================");
-  console.log("Matches Returned:", json.data.length);
-  console.log("Matches Saved:", liveMatches.length);
-
-  liveMatches.forEach(m => {
-    console.log(m.name, "|", m.status);
-  });
-
-  console.log("================================");
-
 }
 
 // ===============================
@@ -118,6 +91,11 @@ async function syncScore() {
 
     if (json.status !== "success") {
       console.log("API Error:", json.reason);
+      return;
+    }
+
+    if (!json.data) {
+      console.log("No Match Data");
       return;
     }
 
@@ -163,23 +141,18 @@ async function syncScore() {
 
     };
 
-    console.log("===== SCOREBOARD =====");
-    console.log(JSON.stringify(scoreboard, null, 2));
-
     await db.collection("scoreboard").doc("live").set(scoreboard, {
       merge: true
     });
 
     console.log("================================");
     console.log("Firebase Updated Successfully");
-    console.log("Runs:", runs);
-    console.log("Wickets:", wickets);
-    console.log("Overs:", overs);
+    console.log(scoreboard);
     console.log("================================");
 
   } catch (err) {
 
-    console.error("ERROR:", err);
+    console.error(err);
     process.exit(1);
 
   }
