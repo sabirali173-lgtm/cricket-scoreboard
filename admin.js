@@ -1,23 +1,63 @@
-import { db, doc, onSnapshot } from "./firebase.js";
+import {
+  db,
+  doc,
+  setDoc
+} from "./firebase.js";
 
-const scoreRef = doc(db, "scoreboard", "live");
+async function loadMatches() {
+  try {
+    const API_KEY = "YOUR_API_KEY";
 
-onSnapshot(scoreRef, (snapshot) => {
-    if (!snapshot.exists()) return;
+    const res = await fetch(
+      `https://api.cricapi.com/v1/currentMatches?apikey=${API_KEY}`
+    );
 
-    const data = snapshot.data();
+    const json = await res.json();
 
-    document.body.innerHTML = `
-    <div style="width:100%;height:100vh;background:#111;color:#fff;
-    display:flex;justify-content:center;align-items:center;
-    font-family:Arial,sans-serif;font-size:38px;">
-        <div>
-            <h1>${data.team1} ${data.runs}/${data.wickets}</h1>
-            <h2>Overs : ${data.overs}</h2>
-            <h3>${data.batsman1} & ${data.batsman2}</h3>
-            <h4>Bowler : ${data.bowler}</h4>
-            <h4>Target : ${data.target}</h4>
-            <h4>Status : ${data.status}</h4>
-        </div>
-    </div>`;
-});
+    const select = document.getElementById("matchSelect");
+    select.innerHTML = "";
+
+    if (json.status !== "success") {
+      alert("Unable to load matches");
+      return;
+    }
+
+    json.data.forEach(match => {
+      const option = document.createElement("option");
+      option.value = match.id;
+      option.text = match.name;
+      select.appendChild(option);
+    });
+
+  } catch (err) {
+    console.error(err);
+    alert("Error loading matches");
+  }
+}
+
+async function saveMatch() {
+  try {
+    const matchId = document.getElementById("matchSelect").value;
+
+    await setDoc(
+      doc(db, "scoreboard", "settings"),
+      {
+        selectedMatchId: matchId
+      },
+      { merge: true }
+    );
+
+    alert("Match selected successfully!");
+  } catch (err) {
+    console.error(err);
+    alert("Failed to save match");
+  }
+}
+
+// Existing button ke liye placeholder
+window.saveScore = function () {
+  alert("saveScore() abhi implement karna baqi hai.");
+};
+
+window.loadMatches = loadMatches;
+window.saveMatch = saveMatch;
