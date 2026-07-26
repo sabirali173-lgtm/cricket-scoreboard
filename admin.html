@@ -1,56 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Scoreboard Admin</title>
-    <link rel="stylesheet" href="admin.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cricket Scoreboard Admin</title>
+<link rel="stylesheet" href="admin.css">
 </head>
+
 <body>
 
 <div class="container">
 
-    <h1>🏏 Cricket Scoreboard Admin</h1>
+<h1>🏏 Cricket Scoreboard Admin</h1>
 
-    <hr>
+<hr>
 
-    <h2>🎯 Select Live Match</h2>
+<h2>🎯 Live Match</h2>
 
-    <button onclick="loadMatches()">🔄 Load Live Matches</button>
+<button onclick="loadMatches()">🔄 Load Live Matches</button>
 
-    <br><br>
+<br><br>
 
-    <select id="matchSelect" style="width:100%;padding:10px;font-size:16px;">
-        <option>Click "Load Live Matches"</option>
-    </select>
+<select id="matchSelect">
+<option>Loading...</option>
+</select>
 
-    <br><br>
+<br><br>
 
-    <button onclick="saveMatch()">💾 Save Selected Match</button>
+<button onclick="saveMatch()">💾 Save Selected Match</button>
 
-    <hr>
+<hr>
 
-    <label>Team 1</label>
-    <input type="text" id="team1" value="PAKISTAN">
+<h2>Manual Score Update</h2>
 
-    <label>Team 2</label>
-    <input type="text" id="team2" value="WEST INDIES">
+<label>Team 1</label>
+<input type="text" id="team1">
 
-    <label>Runs</label>
-    <input type="number" id="runs" value="0">
+<label>Team 2</label>
+<input type="text" id="team2">
 
-    <label>Wickets</label>
-    <input type="number" id="wickets" value="0">
+<label>Runs</label>
+<input type="number" id="runs">
 
-    <label>Overs</label>
-    <input type="text" id="overs" value="0.0">
+<label>Wickets</label>
+<input type="number" id="wickets">
 
-    <label>Target</label>
-    <input type="number" id="target" value="0">
+<label>Overs</label>
+<input type="text" id="overs">
 
-    <br><br>
+<label>Batsman 1</label>
+<input type="text" id="batsman1">
 
-    <button onclick="saveScore()">🏏 Update Scoreboard</button>
+<label>Batsman 2</label>
+<input type="text" id="batsman2">
+
+<label>Bowler</label>
+<input type="text" id="bowler">
+
+<label>Target</label>
+<input type="text" id="target">
+
+<label>Status</label>
+<input type="text" id="status">
+
+<br><br>
+
+<button onclick="saveScore()">
+🏏 Update Scoreboard
+</button>
 
 </div>
 
