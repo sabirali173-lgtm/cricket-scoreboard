@@ -22,6 +22,9 @@ async function syncScore() {
       return;
     }
 
+    console.log(JSON.stringify(json, null, 2));
+console.log(match?.score);
+
     const match = json.data;
 
     console.log(JSON.stringify(json, null, 2));
