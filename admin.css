@@ -1,53 +1,108 @@
-body{
+*{
     margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#0f172a;
+    color:#ffffff;
+    font-family:Arial, Helvetica, sans-serif;
     padding:30px;
-    background:#111;
-    color:#fff;
-    font-family:Arial,sans-serif;
 }
 
 .container{
     max-width:900px;
     margin:auto;
-    background:#1e1e1e;
-    padding:20px;
-    border-radius:10px;
+    background:#1e293b;
+    padding:25px;
+    border-radius:12px;
+    box-shadow:0 0 20px rgba(0,0,0,.35);
 }
 
 h1{
     text-align:center;
-    color:#00ff99;
+    color:#00e676;
+    margin-bottom:20px;
+}
+
+h2{
+    color:#38bdf8;
+    margin:20px 0 10px;
+}
+
+hr{
+    border:none;
+    height:1px;
+    background:#334155;
+    margin:20px 0;
 }
 
 label{
     display:block;
     margin-top:12px;
+    margin-bottom:6px;
     font-weight:bold;
 }
 
 input,
 select{
     width:100%;
-    padding:10px;
-    margin-top:5px;
-    margin-bottom:10px;
-    border-radius:5px;
-    border:none;
-    font-size:16px;
+    padding:12px;
+    border:1px solid #475569;
+    border-radius:8px;
+    background:#0f172a;
+    color:#fff;
+    font-size:15px;
+    outline:none;
+}
+
+input:focus,
+select:focus{
+    border-color:#00e676;
 }
 
 button{
     width:100%;
-    padding:12px;
-    margin-top:10px;
+    padding:13px;
+    margin-top:15px;
+    border:none;
+    border-radius:8px;
     background:#00c853;
     color:#fff;
-    border:none;
-    border-radius:5px;
     font-size:16px;
+    font-weight:bold;
     cursor:pointer;
+    transition:.3s;
 }
 
 button:hover{
-    background:#009624;
+    background:#00a844;
+    transform:translateY(-2px);
+}
+
+button:active{
+    transform:translateY(0);
+}
+
+@media (max-width:768px){
+
+    body{
+        padding:15px;
+    }
+
+    .container{
+        padding:18px;
+    }
+
+    h1{
+        font-size:24px;
+    }
+
+    input,
+    select,
+    button{
+        font-size:14px;
+    }
+
 }
