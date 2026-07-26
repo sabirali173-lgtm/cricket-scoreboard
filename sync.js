@@ -39,8 +39,20 @@ async function saveLiveMatches() {
   }
 
   const liveMatches = (json.data || []).filter(match => {
-    return match.matchStarted === true && match.matchEnded === false;
-  });
+
+  const status = (match.status || "").toLowerCase();
+
+  return (
+    match.id &&
+    !status.includes("won") &&
+    !status.includes("match ended") &&
+    !status.includes("stumps") &&
+    !status.includes("abandoned") &&
+    !status.includes("cancelled") &&
+    !status.includes("draw")
+  );
+
+});
 
   await db.collection("scoreboard").doc("matches").set({
     list: liveMatches.map(match => ({
