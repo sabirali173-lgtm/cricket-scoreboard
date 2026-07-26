@@ -8,6 +8,16 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+async function getSelectedMatchId() {
+  const doc = await db.collection("scoreboard").doc("settings").get();
+
+  if (!doc.exists) {
+    throw new Error("settings document not found");
+  }
+
+  return doc.data().selectedMatchId;
+}
+
 // Current Match ID
 const MATCH_ID = "ea479cff-ddbe-48e0-9e4a-528f61a8a175";
 
