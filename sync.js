@@ -8,6 +8,7 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
+// Read selected Match ID from Firebase
 async function getSelectedMatchId() {
   const doc = await db.collection("scoreboard").doc("settings").get();
 
@@ -18,12 +19,14 @@ async function getSelectedMatchId() {
   return doc.data().selectedMatchId;
 }
 
-// Current Match ID
-const MATCH_ID = "ea479cff-ddbe-48e0-9e4a-528f61a8a175";
-
 async function syncScore() {
   try {
     console.log("API KEY LENGTH:", process.env.API_KEY?.length);
+
+    // Get Match ID from Firebase
+    const MATCH_ID = await getSelectedMatchId();
+
+    console.log("Selected Match ID:", MATCH_ID);
 
     const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
@@ -35,7 +38,7 @@ async function syncScore() {
     console.log("===== API RESPONSE =====");
     console.log(JSON.stringify(json, null, 2));
 
-    if (json.status === "failure") {
+    if (json.status !== "success") {
       console.log("API Error:", json.reason);
       return;
     }
@@ -60,6 +63,8 @@ async function syncScore() {
     }
 
     const scoreboard = {
+      matchId: MATCH_ID,
+
       team1: match.teams?.[0] || "",
       team2: match.teams?.[1] || "",
 
@@ -69,6 +74,9 @@ async function syncScore() {
       status: match.status || "",
       match: match.name || "",
       venue: match.venue || "",
+      tossWinner: match.tossWinner || "",
+      tossChoice: match.tossChoice || "",
+      matchWinner: match.matchWinner || "",
 
       runs,
       wickets,
@@ -85,14 +93,14 @@ async function syncScore() {
     });
 
     console.log("================================");
-    console.log("Firebase Write Success");
+    console.log("Firebase Updated Successfully");
     console.log("Runs:", runs);
     console.log("Wickets:", wickets);
     console.log("Overs:", overs);
     console.log("================================");
 
   } catch (err) {
-    console.error(err);
+    console.error("ERROR:", err);
     process.exit(1);
   }
 }
