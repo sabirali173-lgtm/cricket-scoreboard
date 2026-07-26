@@ -9,7 +9,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // ===============================
-// Read selected Match ID from Firebase
+// Read selected Match ID
 // ===============================
 async function getSelectedMatchId() {
   const docRef = await db.collection("scoreboard").doc("settings").get();
@@ -22,9 +22,10 @@ async function getSelectedMatchId() {
 }
 
 // ===============================
-// Save ALL Live Matches to Firebase
+// Save Matches To Firebase
 // ===============================
 async function saveLiveMatches() {
+
   const url = `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
 
   console.log("Fetching live matches...");
@@ -33,55 +34,51 @@ async function saveLiveMatches() {
   const json = await res.json();
 
   if (json.status !== "success") {
-    console.log("Unable to load live matches:", json.reason);
+    console.log("Unable to load matches:", json.reason);
     return;
   }
 
- // Save all matches returned by CricAPI
-const liveMatches = (json.data || []).filter(match => {
-
-  if (!match.id) return false;
-
-  return true;
-
-});
+  const liveMatches = (json.data || []).filter(match => match.id);
 
   await db.collection("scoreboard").doc("matches").set({
     list: liveMatches.map(match => ({
       id: match.id,
       name: match.name,
       status: match.status,
-      matchType: match.matchType || "",
+      matchType: match.matchType || ""
     })),
-    updated: new Date().toISOString(),
+    updated: new Date().toISOString()
   });
 
   console.log("================================");
-console.log("Matches Returned:", json.data.length);
-console.log("Matches Saved:", liveMatches.length);
+  console.log("Matches Returned:", json.data.length);
+  console.log("Matches Saved:", liveMatches.length);
 
-liveMatches.forEach(m => {
-  console.log(m.name, "|", m.status);
-});
+  liveMatches.forEach(m => {
+    console.log(m.name, "|", m.status);
+  });
 
-console.log("================================");
+  console.log("================================");
+
+}
 
 // ===============================
-// Sync Selected Match Score
+// Sync Score
 // ===============================
 async function syncScore() {
+
   try {
+
     console.log("API KEY LENGTH:", process.env.API_KEY?.length);
 
-    // 1. Save all live matches first
     await saveLiveMatches();
 
-    // 2. Get selected match from Firebase
     const MATCH_ID = await getSelectedMatchId();
 
     console.log("Selected Match ID:", MATCH_ID);
 
-    const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
+    const url =
+      `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
     console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
 
@@ -96,11 +93,6 @@ async function syncScore() {
       return;
     }
 
-    if (!json.data) {
-      console.log("No match data found");
-      return;
-    }
-
     const match = json.data;
 
     let runs = 0;
@@ -108,14 +100,17 @@ async function syncScore() {
     let overs = 0;
 
     if (Array.isArray(match.score) && match.score.length > 0) {
+
       const innings = match.score[match.score.length - 1];
 
       runs = innings.r ?? 0;
       wickets = innings.w ?? 0;
       overs = innings.o ?? 0;
+
     }
 
     const scoreboard = {
+
       matchId: MATCH_ID,
 
       team1: match.teams?.[0] || "",
@@ -127,6 +122,7 @@ async function syncScore() {
       status: match.status || "",
       match: match.name || "",
       venue: match.venue || "",
+
       tossWinner: match.tossWinner || "",
       tossChoice: match.tossChoice || "",
       matchWinner: match.matchWinner || "",
@@ -135,14 +131,15 @@ async function syncScore() {
       wickets,
       overs,
 
-      updated: new Date().toISOString(),
+      updated: new Date().toISOString()
+
     };
 
     console.log("===== SCOREBOARD =====");
     console.log(JSON.stringify(scoreboard, null, 2));
 
     await db.collection("scoreboard").doc("live").set(scoreboard, {
-      merge: true,
+      merge: true
     });
 
     console.log("================================");
@@ -151,10 +148,14 @@ async function syncScore() {
     console.log("Wickets:", wickets);
     console.log("Overs:", overs);
     console.log("================================");
+
   } catch (err) {
+
     console.error("ERROR:", err);
     process.exit(1);
+
   }
+
 }
 
 syncScore();
