@@ -13,6 +13,9 @@ const MATCH_ID = "ea479cff-ddbe-48e0-9e4a-528f61a8a175";
 
 async function syncScore() {
   try {
+
+    console.log("API KEY LENGTH:", process.env.API_KEY?.length);
+console.log("API KEY:", process.env.API_KEY?.substring(0, 8) + "...");
     const url = `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
 
     console.log("Fetching:", url.replace(process.env.API_KEY, "***"));
