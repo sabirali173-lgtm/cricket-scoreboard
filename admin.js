@@ -6,25 +6,24 @@ import {
   updateDoc
 } from "./firebase.js";
 
-// =============================
-// Load Matches From Firebase
-// =============================
+// ===============================
+// Load Live Matches
+// ===============================
 async function loadMatches() {
 
   try {
 
-    const select = document.getElementById("matchSelect");
+    const btn = document.querySelector("button");
 
-    select.innerHTML = "<option>Loading...</option>";
+    if (btn) btn.innerText = "Loading...";
 
-    const snap = await getDoc(
-      doc(db, "scoreboard", "matches")
-    );
+    const snap = await getDoc(doc(db, "scoreboard", "matches"));
 
     if (!snap.exists()) {
 
-      select.innerHTML =
-        "<option>No Live Matches</option>";
+      alert("No matches found.");
+
+      if (btn) btn.innerText = "Refresh Live Matches";
 
       return;
 
@@ -32,16 +31,9 @@ async function loadMatches() {
 
     const matches = snap.data().list || [];
 
+    const select = document.getElementById("matchSelect");
+
     select.innerHTML = "";
-
-    if (matches.length === 0) {
-
-      select.innerHTML =
-        "<option>No Live Matches Available</option>";
-
-      return;
-
-    }
 
     matches.forEach(match => {
 
@@ -49,44 +41,28 @@ async function loadMatches() {
 
       option.value = match.id;
 
-      option.textContent =
+      option.text =
         `${match.name} | ${match.status}`;
 
       select.appendChild(option);
 
     });
 
-    // Restore selected match
-    const setting = await getDoc(
-      doc(db, "scoreboard", "settings")
-    );
-
-    if (setting.exists()) {
-
-      const id =
-        setting.data().selectedMatchId;
-
-      if (id) {
-
-        select.value = id;
-
-      }
-
-    }
+    if (btn) btn.innerText = "Refresh Live Matches";
 
   } catch (err) {
 
     console.error(err);
 
-    alert("Unable to Load Matches");
+    alert("Unable to load matches");
 
   }
 
 }
 
-// =============================
+// ===============================
 // Save Selected Match
-// =============================
+// ===============================
 async function saveMatch() {
 
   try {
@@ -110,82 +86,8 @@ async function saveMatch() {
 
     console.error(err);
 
-    alert("Unable to Save");
+    alert("Unable to Save Match");
 
   }
 
 }
-
-// =============================
-// Manual Score Update
-// =============================
-async function saveScore() {
-
-  try {
-
-    const score = {
-
-      team1:
-        document.getElementById("team1").value,
-
-      team2:
-        document.getElementById("team2").value,
-
-      runs:
-        Number(document.getElementById("runs").value),
-
-      wickets:
-        Number(document.getElementById("wickets").value),
-
-      overs:
-        document.getElementById("overs").value,
-
-      batsman1:
-        document.getElementById("batsman1").value,
-
-      batsman2:
-        document.getElementById("batsman2").value,
-
-      bowler:
-        document.getElementById("bowler").value,
-
-      target:
-        document.getElementById("target").value,
-
-      status:
-        document.getElementById("status").value,
-
-      updated:
-        new Date().toISOString()
-
-    };
-
-    await updateDoc(
-      doc(db, "scoreboard", "live"),
-      score
-    );
-
-    alert("✅ Score Updated");
-
-  } catch (err) {
-
-    console.error(err);
-
-    alert("Unable To Update");
-
-  }
-
-}
-
-// =============================
-// Auto Refresh Every 30 Seconds
-// =============================
-loadMatches();
-
-setInterval(loadMatches, 30000);
-
-// =============================
-
-window.loadMatches = loadMatches;
-window.saveMatch = saveMatch;
-window.saveScore = saveScore;
