@@ -91,3 +91,96 @@ async function saveMatch() {
   }
 
 }
+// ===============================
+// Save Score To Firebase
+// ===============================
+async function saveScore() {
+
+  try {
+
+    const data = {
+
+      team1: document.getElementById("team1").value,
+
+      team2: document.getElementById("team2").value,
+
+      runs: Number(document.getElementById("runs").value),
+
+      wickets: Number(document.getElementById("wickets").value),
+
+      overs: document.getElementById("overs").value,
+
+      target: Number(document.getElementById("target").value),
+
+      crr: document.getElementById("crr").value,
+
+      rrr: document.getElementById("rrr").value,
+
+      batsman1: document.getElementById("batsman1").value,
+
+      batsman1Runs: document.getElementById("batsman1Runs").value,
+
+      batsman2: document.getElementById("batsman2").value,
+
+      batsman2Runs: document.getElementById("batsman2Runs").value,
+
+      bowler: document.getElementById("bowler").value,
+
+      bowlerFigures: document.getElementById("bowlerFigures").value,
+
+      status: document.getElementById("status").value,
+
+      venue: document.getElementById("venue").value,
+
+      toss: document.getElementById("toss").value,
+
+      lastOver: document.getElementById("lastOver").value,
+
+      partnership: document.getElementById("partnership").value,
+
+      matchPhase: document.getElementById("matchPhase").value,
+
+      updated: new Date().toISOString()
+
+    };
+
+    await updateDoc(
+      doc(db, "scoreboard", "live"),
+      data
+    );
+
+    alert("✅ Firebase Updated Successfully");
+
+  } catch (err) {
+
+    console.error(err);
+
+    alert("❌ Unable to Update Firebase");
+
+  }
+
+}
+// ===============================
+// Expose Functions To HTML
+// ===============================
+window.loadMatches = loadMatches;
+window.saveMatch = saveMatch;
+window.saveScore = saveScore;
+
+// ===============================
+// Auto Load Matches On Page Load
+// ===============================
+window.addEventListener("load", () => {
+
+    loadMatches();
+
+});
+
+// ===============================
+// Auto Refresh Every 60 Seconds
+// ===============================
+setInterval(() => {
+
+    loadMatches();
+
+}, 60000);
