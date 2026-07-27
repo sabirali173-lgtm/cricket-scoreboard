@@ -1,273 +1,208 @@
-import admin from "firebase-admin";
+import {
+    db,
+    doc,
+    onSnapshot
+} from "./firebase.js";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-const db = admin.firestore();
+const scoreRef = doc(db, "scoreboard", "live");
 
 // ===============================
-// Read Selected Match ID
+// Live Firebase Listener
 // ===============================
-async function getSelectedMatchId() {
+onSnapshot(scoreRef, (snapshot) => {
 
-  const docRef = await db
-    .collection("scoreboard")
-    .doc("settings")
-    .get();
+    if (!snapshot.exists()) return;
 
-  if (!docRef.exists) {
-    throw new Error("settings document not found");
-  }
+    const data = snapshot.data();
 
-  return docRef.data().selectedMatchId;
+    console.log("LIVE SCORE:", data);
 
-}
+    // ===============================
+    // Teams
+    // ===============================
+    document.getElementById("team1").textContent =
+        data.team1 || "";
 
-// ===============================
-// Save Current Matches
-// ===============================
-async function saveLiveMatches() {
+    document.getElementById("team2").textContent =
+        data.team2 || "";
 
-  const url =
-    `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
+    // ===============================
+    // Team Logos
+    // ===============================
+    if (document.getElementById("team1Logo")) {
 
-  console.log("Fetching Current Matches...");
-
-  const response = await fetch(url);
-
-  const json = await response.json();
-
-  if (json.status !== "success") {
-
-    console.log("API ERROR:", json.reason);
-
-    return;
-
-  }
-
-  const matches = (json.data || []).map(match => ({
-
-    id: match.id,
-
-    name: match.name,
-
-    status: match.status,
-
-    matchType: match.matchType || "",
-
-    matchStarted: match.matchStarted || false,
-
-    matchEnded: match.matchEnded || false,
-
-    date: match.date || "",
-
-    teams: match.teams || []
-
-  }));
-
-  await db
-    .collection("scoreboard")
-    .doc("matches")
-    .set({
-
-      list: matches,
-
-      updated: new Date().toISOString()
-
-    });
-
-  console.log("================================");
-  console.log("Matches Returned:", matches.length);
-
-  matches.forEach(match => {
-
-    console.log(
-      match.name,
-      "|",
-      match.status
-    );
-
-  });
-
-  console.log("================================");
-
-}
-
-// ===============================
-// Sync Selected Match
-// ===============================
-async function syncScore() {
-
-  try {
-
-    console.log(
-      "API KEY LENGTH:",
-      process.env.API_KEY?.length
-    );
-
-    // Save Match List
-    await saveLiveMatches();
-
-    // Selected Match
-    const MATCH_ID =
-      await getSelectedMatchId();
-
-    console.log(
-      "Selected Match:",
-      MATCH_ID
-    );
-
-    const url =
-      `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
-
-    console.log(
-      "Fetching:",
-      url.replace(process.env.API_KEY, "***")
-    );
-
-    const response =
-      await fetch(url);
-
-    const json =
-      await response.json();
-
-    if (json.status !== "success") {
-
-      console.log(
-        "API Error:",
-        json.reason
-      );
-
-      return;
+        document.getElementById("team1Logo").src =
+            data.team1Logo || "";
 
     }
 
-    if (!json.data) {
+    if (document.getElementById("team2Logo")) {
 
-      console.log("No Match Data");
-
-      return;
+        document.getElementById("team2Logo").src =
+            data.team2Logo || "";
 
     }
 
-    const match = json.data;
-
-        // ===============================
+    // ===============================
     // Score
     // ===============================
+    document.getElementById("runs").textContent =
+        data.runs ?? 0;
 
-    let runs = 0;
-    let wickets = 0;
-    let overs = 0;
+    document.getElementById("wickets").textContent =
+        data.wickets ?? 0;
 
-    if (Array.isArray(match.score) && match.score.length > 0) {
+    document.getElementById("overs").textContent =
+        data.overs ?? "0.0";
 
-      const innings = match.score[match.score.length - 1];
+    // ===============================
+    // Run Rates
+    // ===============================
+    if (document.getElementById("crr")) {
 
-      runs = innings.r ?? 0;
-      wickets = innings.w ?? 0;
-      overs = innings.o ?? 0;
+        document.getElementById("crr").textContent =
+            data.crr || "-";
+
+    }
+
+    if (document.getElementById("rrr")) {
+
+        document.getElementById("rrr").textContent =
+            data.rrr || "-";
+
+    }
+      // ===============================
+    // Batsmen
+    // ===============================
+    if (document.getElementById("batsman1")) {
+
+        document.getElementById("batsman1").textContent =
+            data.batsman1 || "-";
+
+    }
+
+    if (document.getElementById("batsman1Runs")) {
+
+        document.getElementById("batsman1Runs").textContent =
+            data.batsman1Runs || "0 (0)";
+
+    }
+
+    if (document.getElementById("batsman2")) {
+
+        document.getElementById("batsman2").textContent =
+            data.batsman2 || "-";
+
+    }
+
+    if (document.getElementById("batsman2Runs")) {
+
+        document.getElementById("batsman2Runs").textContent =
+            data.batsman2Runs || "0 (0)";
 
     }
 
     // ===============================
-    // Build Scoreboard Object
+    // Bowler
     // ===============================
+    if (document.getElementById("bowler")) {
 
-    const scoreboard = {
+        document.getElementById("bowler").textContent =
+            data.bowler || "-";
 
-      matchId: MATCH_ID,
+    }
 
-      match: match.name || "",
+    if (document.getElementById("bowlerFigures")) {
 
-      status: match.status || "",
+        document.getElementById("bowlerFigures").textContent =
+            data.bowlerFigures || "-";
 
-      venue: match.venue || "",
-
-      team1: match.teams?.[0] || "",
-
-      team2: match.teams?.[1] || "",
-
-      team1Logo: match.teamInfo?.find(
-        t => t.name === match.teams?.[0]
-      )?.img || "",
-
-      team2Logo: match.teamInfo?.find(
-        t => t.name === match.teams?.[1]
-      )?.img || "",
-
-      runs,
-
-      wickets,
-
-      overs,
-
-      target: match.target || "",
-
-      batsman1: match.batsman1 || "",
-
-      batsman1Runs: match.batsman1Runs || "",
-
-      batsman2: match.batsman2 || "",
-
-      batsman2Runs: match.batsman2Runs || "",
-
-      bowler: match.bowler || "",
-
-      bowlerFigures: match.bowlerFigures || "",
-
-      crr: match.crr || "",
-
-      rrr: match.rrr || "",
-
-      partnership: match.partnership || "",
-
-      lastOver: match.lastOver || "",
-
-      matchPhase: match.matchPhase || "",
-
-      toss:
-        match.tossWinner
-          ? `${match.tossWinner} won toss & chose ${match.tossChoice}`
-          : "",
-
-      tossWinner: match.tossWinner || "",
-
-      tossChoice: match.tossChoice || "",
-
-      matchWinner: match.matchWinner || "",
-
-      updated: new Date().toISOString()
-
-    };
+    }
 
     // ===============================
-    // Save To Firebase
+    // Match Information
     // ===============================
+    if (document.getElementById("target")) {
 
-    await db
-      .collection("scoreboard")
-      .doc("live")
-      .set(scoreboard, {
-        merge: true
-      });
+        document.getElementById("target").textContent =
+            data.target || "-";
 
-    console.log("================================");
-    console.log("Firebase Updated Successfully");
-    console.log(scoreboard);
-    console.log("================================");
+    }
 
-  } catch (err) {
+    if (document.getElementById("status")) {
 
-    console.error(err);
+        document.getElementById("status").textContent =
+            data.status || "";
 
-    process.exit(1);
+    }
 
-  }
+    if (document.getElementById("venue")) {
 
-}
+        document.getElementById("venue").textContent =
+            data.venue || "";
 
-syncScore();
+    }
+
+    if (document.getElementById("toss")) {
+
+        document.getElementById("toss").textContent =
+            data.toss ||
+            `${data.tossWinner || ""} ${data.tossChoice || ""}`;
+
+    }
+      // ===============================
+    // Last Over
+    // ===============================
+    if (document.getElementById("lastOver")) {
+
+        document.getElementById("lastOver").textContent =
+            data.lastOver || "-";
+
+    }
+
+    // ===============================
+    // Partnership
+    // ===============================
+    if (document.getElementById("partnership")) {
+
+        document.getElementById("partnership").textContent =
+            data.partnership || "-";
+
+    }
+
+    // ===============================
+    // Match Phase
+    // ===============================
+    if (document.getElementById("matchPhase")) {
+
+        document.getElementById("matchPhase").textContent =
+            data.matchPhase || "-";
+
+    }
+
+    // ===============================
+    // Match Name
+    // ===============================
+    if (document.getElementById("match")) {
+
+        document.getElementById("match").textContent =
+            data.match || "";
+
+    }
+
+    // ===============================
+    // Updated Time
+    // ===============================
+    if (document.getElementById("updated")) {
+
+        const time = data.updated
+            ? new Date(data.updated).toLocaleTimeString()
+            : "--";
+
+        document.getElementById("updated").textContent = time;
+
+    }
+
+    console.log("Overlay Updated Successfully");
+
+});
