@@ -5,72 +5,77 @@
 }
 
 body{
-    background:#0f172a;
-    color:#ffffff;
-    font-family:Arial, Helvetica, sans-serif;
+    background:#0d1117;
+    font-family:Arial,Helvetica,sans-serif;
+    color:#fff;
     padding:30px;
 }
 
 .container{
+    width:100%;
     max-width:900px;
     margin:auto;
-    background:#1e293b;
-    padding:25px;
+    background:#161b22;
     border-radius:12px;
-    box-shadow:0 0 20px rgba(0,0,0,.35);
+    padding:30px;
+    box-shadow:0 0 20px rgba(0,255,120,.15);
 }
 
 h1{
     text-align:center;
-    color:#00e676;
+    color:#00ff99;
     margin-bottom:20px;
+    font-size:34px;
 }
 
 h2{
-    color:#38bdf8;
-    margin:20px 0 10px;
+    color:#58a6ff;
+    margin:25px 0 15px;
+    font-size:22px;
 }
 
 hr{
     border:none;
-    height:1px;
-    background:#334155;
-    margin:20px 0;
+    border-top:1px solid #30363d;
+    margin:25px 0;
 }
 
 label{
     display:block;
     margin-top:12px;
     margin-bottom:6px;
+    font-size:15px;
     font-weight:bold;
+    color:#c9d1d9;
 }
 
 input,
 select{
     width:100%;
     padding:12px;
-    border:1px solid #475569;
+    border:none;
     border-radius:8px;
-    background:#0f172a;
+    background:#21262d;
     color:#fff;
     font-size:15px;
     outline:none;
+    transition:.25s;
 }
 
 input:focus,
 select:focus{
-    border-color:#00e676;
+    border:2px solid #00ff99;
 }
 
 button{
     width:100%;
-    padding:13px;
+    padding:14px;
     margin-top:15px;
     border:none;
     border-radius:8px;
     background:#00c853;
     color:#fff;
-    font-size:16px;
+    font-size:17px;
     font-weight:bold;
     cursor:pointer;
     transition:.3s;
@@ -82,27 +87,37 @@ button:hover{
 }
 
 button:active{
-    transform:translateY(0);
+    transform:scale(.98);
 }
 
-@media (max-width:768px){
+::placeholder{
+    color:#888;
+}
 
-    body{
-        padding:15px;
-    }
+@media(max-width:768px){
 
-    .container{
-        padding:18px;
-    }
+.container{
 
-    h1{
-        font-size:24px;
-    }
+padding:20px;
 
-    input,
-    select,
-    button{
-        font-size:14px;
-    }
+}
+
+h1{
+
+font-size:28px;
+
+}
+
+h2{
+
+font-size:20px;
+
+}
+
+button{
+
+font-size:16px;
+
+}
 
 }
