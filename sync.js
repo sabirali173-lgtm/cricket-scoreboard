@@ -212,6 +212,9 @@ console.log(JSON.stringify(batsmen, null, 2));
     const bowlers =
       innings.bowler || [];
 
+    console.log("BOWLER DATA:");
+console.log(JSON.stringify(bowlers, null, 2));
+
     const partnerships =
       innings.partnership?.partnership || [];
 
