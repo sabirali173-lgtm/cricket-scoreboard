@@ -42,7 +42,6 @@ async function rapidRequest(url) {
 
   return await response.json();
 }
-
 // ======================================
 // Selected Match
 // ======================================
