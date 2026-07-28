@@ -22,6 +22,10 @@ const db = admin.firestore();
 const API_HOST = "cricbuzz-cricket.p.rapidapi.com";
 
 async function rapidRequest(url) {
+
+  console.log("API KEY EXISTS:", !!process.env.API_KEY);
+console.log("API KEY LENGTH:", process.env.API_KEY?.length);
+  
   const response = await fetch(url, {
     method: "GET",
     headers: {
