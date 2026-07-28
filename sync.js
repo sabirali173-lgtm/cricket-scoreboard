@@ -161,20 +161,75 @@ async function syncScore() {
 
       target: match.target || "",
 
-      batsman1: "",
-      batsman1Runs: "",
+     const innings = json.scorecard[json.scorecard.length - 1];
 
-      batsman2: "",
-      batsman2Runs: "",
+const batsmen = innings.batsman.filter(
+  b => b.outdec === "not out"
+);
 
-      bowler: "",
-      bowlerFigures: "",
+const currentBowler = innings.bowler[0];
 
-      crr: "",
-      rrr: "",
+const lastPartnership =
+  innings.partnership?.partnership?.[
+    innings.partnership.partnership.length - 1
+  ];
 
-      lastOver: "",
-      partnership: "",
+const scoreboard = {
+
+  matchId: MATCH_ID,
+
+  team1: match.teams?.[0] || "",
+  team2: match.teams?.[1] || "",
+
+  team1Logo: match.teamInfo?.[0]?.img || "",
+  team2Logo: match.teamInfo?.[1]?.img || "",
+
+  match: match.name || "",
+  status: match.status || "",
+
+  venue: match.venue || "",
+
+  tossWinner: match.tossWinner || "",
+  tossChoice: match.tossChoice || "",
+  matchWinner: match.matchWinner || "",
+
+  runs,
+  wickets,
+  overs,
+
+  target: match.target || "",
+
+  batsman1: batsmen[0]?.name || "",
+  batsman1Runs:
+    `${batsmen[0]?.runs || 0} (${batsmen[0]?.balls || 0})`,
+
+  batsman2: batsmen[1]?.name || "",
+  batsman2Runs:
+    `${batsmen[1]?.runs || 0} (${batsmen[1]?.balls || 0})`,
+
+  bowler: currentBowler?.name || "",
+  bowlerFigures:
+    `${currentBowler?.wickets || 0}/${currentBowler?.runs || 0}`,
+
+  crr: innings.runrate || "",
+
+  partnership: lastPartnership
+      ? `${lastPartnership.totalruns} (${lastPartnership.totalballs})`
+      : "",
+
+  rrr: "",
+
+  lastOver: "",
+
+  matchPhase:
+      overs < 6
+        ? "Powerplay"
+        : overs < 15
+        ? "Middle Overs"
+        : "Death Overs",
+
+  updated: new Date().toISOString()
+};
 
       matchPhase: "",
 
