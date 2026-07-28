@@ -1,6 +1,27 @@
 import admin from "firebase-admin";
 import fetch from "node-fetch";
 
+// ===============================
+// RapidAPI Request
+// ===============================
+async function rapidRequest(url) {
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "x-rapidapi-key": process.env.API_KEY,
+      "x-rapidapi-host": "cricbuzz-cricket.p.rapidapi.com"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`RapidAPI Error ${response.status}`);
+  }
+
+  return await response.json();
+
+}
+
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 admin.initializeApp({
@@ -71,18 +92,19 @@ async function syncScore() {
 
     console.log("Selected Match:", MATCH_ID);
 
-      const matchInfoUrl =
-      `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
+    const scorecardUrl =
+  `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${MATCH_ID}/hscard`;
 
-    const matchInfoRes = await fetch(matchInfoUrl);
-    const matchInfo = await matchInfoRes.json();
+const json = await rapidRequest(scorecardUrl);
 
-    if (matchInfo.status !== "success") {
-      console.log("Match Info Error:", matchInfo.reason);
-      return;
-    }
+const match = json;
 
-    const match = matchInfo.data;
+const innings = json.scorecard?.[json.scorecard.length - 1];
+
+if (!innings) {
+  console.log("No innings found");
+  return;
+}
 
     const scorecardUrl =
       `https://api.cricapi.com/v1/match_scorecard?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
@@ -167,16 +189,22 @@ async function syncScore() {
     let wickets = 0;
     let overs = 0;
 
-    if (Array.isArray(match.score) && match.score.length > 0) {
+    const runs = innings.score || 0;
+const wickets = innings.wickets || 0;
+const overs = innings.overs || 0;
 
-      const latest =
-        match.score[match.score.length - 1];
+const batsmen = innings.batsman || [];
+const bowlers = innings.bowler || [];
+const partnerships = innings.partnership?.partnership || [];
 
-      runs = latest.r ?? 0;
-      wickets = latest.w ?? 0;
-      overs = latest.o ?? 0;
-    }
+const notOut = batsmen.filter(
+  b => b.outdec && b.outdec.toLowerCase().includes("not out")
+);
 
+const currentPartnership =
+  partnerships.length > 0
+    ? partnerships[partnerships.length - 1]
+    : null;
     const scoreboard = {
 
       matchId: MATCH_ID,
