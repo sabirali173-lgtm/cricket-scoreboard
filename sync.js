@@ -181,9 +181,9 @@ if (!innings) {
     let wickets = 0;
     let overs = 0;
 
-    const runs = innings.score || 0;
-const wickets = innings.wickets || 0;
-const overs = innings.overs || 0;
+   runs = innings.score || 0;
+wickets = innings.wickets || 0;
+overs = innings.overs || 0;
 
 const batsmen = innings.batsman || [];
 const bowlers = innings.bowler || [];
