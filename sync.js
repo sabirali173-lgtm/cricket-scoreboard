@@ -106,14 +106,6 @@ if (!innings) {
   return;
 }
 
-    const scorecardUrl =
-      `https://api.cricapi.com/v1/match_scorecard?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
-
-    console.log("Loading Scorecard...");
-
-    const scorecardRes = await fetch(scorecardUrl);
-    const scorecardJson = await scorecardRes.json();
-
     let batsman1 = "";
     let batsman1Runs = "";
 
