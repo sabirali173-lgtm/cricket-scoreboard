@@ -24,22 +24,19 @@ const API_HOST = "cricbuzz-cricket.p.rapidapi.com";
 async function rapidRequest(url) {
 
   console.log("API KEY EXISTS:", !!process.env.API_KEY);
-console.log("API KEY LENGTH:", process.env.API_KEY?.length);
-  
+  console.log("API KEY LENGTH:", process.env.API_KEY?.length);
+
   const response = await fetch(url, {
     method: "GET",
     headers: {
       "x-rapidapi-key": process.env.API_KEY,
       "x-rapidapi-host": API_HOST
-        
-      console.log("API KEY EXISTS:", !!process.env.API_KEY);
-console.log("API KEY LENGTH:", process.env.API_KEY?.length);
     }
   });
 
   if (!response.ok) {
     throw new Error(
-      `RapidAPI Error ${response.status} : ${await response.text()}`
+      `RapidAPI Error ${response.status}: ${await response.text()}`
     );
   }
 
