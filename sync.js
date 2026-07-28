@@ -212,17 +212,15 @@ async function syncScore() {
     const partnerships =
       innings.partnership?.partnership || [];
 
-    const notOut =
-      batsmen.filter(
+    const notOut = batsmen.filter(player => {
+  const status =
+    player.outdec ||
+    player.outDesc ||
+    player.status ||
+    "";
 
-        player =>
-
-          player.outdec &&
-          player.outdec
-            .toLowerCase()
-            .includes("not out")
-
-      );
+  return !status.toLowerCase().includes("out");
+});
 
     const currentPartnership =
       partnerships.length > 0
