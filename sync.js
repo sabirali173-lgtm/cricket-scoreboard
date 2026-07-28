@@ -224,29 +224,36 @@ const currentPartnership =
       tossChoice: match.tossChoice || "",
       matchWinner: match.matchWinner || "",
 
-      runs,
-      wickets,
-      overs,
+  runs,
+wickets,
+overs,
 
-      target: match.target || "",
+target: "",
 
-      batsman1,
-      batsman1Runs,
+batsman1: notOut[0]?.name || "",
+batsman1Runs: `${notOut[0]?.runs || 0} (${notOut[0]?.balls || 0})`,
 
-      batsman2,
-      batsman2Runs,
+batsman2: notOut[1]?.name || "",
+batsman2Runs: `${notOut[1]?.runs || 0} (${notOut[1]?.balls || 0})`,
 
-      bowler,
-      bowlerFigures,
+bowler: bowlers[0]?.name || "",
+bowlerFigures: `${bowlers[0]?.wickets || 0}/${bowlers[0]?.runs || 0}`,
 
-      crr,
-      rrr,
+crr: innings.runrate?.toString() || "",
+rrr: "",
 
-      lastOver,
-      partnership,
+lastOver: "",
 
-      updated: new Date().toISOString()
-    };
+partnership: currentPartnership
+  ? `${currentPartnership.totalruns} (${currentPartnership.totalballs})`
+  : "",
+
+matchPhase:
+  overs < 6
+    ? "Powerplay"
+    : overs < 15
+    ? "Middle Overs"
+    : "Death Overs",
 
     await db
       .collection("scoreboard")
