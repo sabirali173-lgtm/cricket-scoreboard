@@ -16,36 +16,27 @@ admin.initializeApp({
 const db = admin.firestore();
 
 // ======================================
-// RapidAPI Request
+// RapidAPI
 // ======================================
 
+const API_HOST = "cricbuzz-cricket.p.rapidapi.com";
+
 async function rapidRequest(url) {
-
   const response = await fetch(url, {
-
     method: "GET",
-
     headers: {
-
       "x-rapidapi-key": process.env.API_KEY,
-
-      "x-rapidapi-host":
-        "cricbuzz-cricket.p.rapidapi.com"
-
+      "x-rapidapi-host": API_HOST
     }
-
   });
 
   if (!response.ok) {
-
     throw new Error(
-      `RapidAPI Error ${response.status}`
+      `RapidAPI Error ${response.status} : ${await response.text()}`
     );
-
   }
 
   return await response.json();
-
 }
 
 // ======================================
@@ -53,74 +44,56 @@ async function rapidRequest(url) {
 // ======================================
 
 async function getSelectedMatchId() {
-
   const doc = await db
     .collection("scoreboard")
     .doc("settings")
     .get();
 
   if (!doc.exists) {
-
-    throw new Error(
-      "settings document not found"
-    );
-
+    throw new Error("settings document not found");
   }
 
-  return doc.data().selectedMatchId;
-
+  return String(doc.data().selectedMatchId);
 }
 
 // ======================================
-// Live Matches
+// Save Live Matches
 // ======================================
 
 async function saveLiveMatches() {
 
-  console.log("Loading Live Matches...");
+  console.log("Loading live matches...");
 
   const json = await rapidRequest(
-
     "https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live"
-
   );
 
-  const matches = [];
+  const list = [];
 
   if (json.typeMatches) {
 
     json.typeMatches.forEach(type => {
 
-      type.seriesMatches.forEach(series => {
+      (type.seriesMatches || []).forEach(series => {
 
         if (!series.seriesAdWrapper) return;
 
-        series.seriesAdWrapper.matches.forEach(item => {
+        (series.seriesAdWrapper.matches || []).forEach(match => {
 
-          if (!item.matchInfo) return;
+          if (!match.matchInfo) return;
 
-          matches.push({
+          list.push({
 
-            id:
-              item.matchInfo.matchId.toString(),
+            id: String(match.matchInfo.matchId),
 
             name:
-              item.matchInfo.matchDesc,
+              `${match.matchInfo.team1.teamSName} vs ${match.matchInfo.team2.teamSName}`,
 
             status:
-              item.matchInfo.status,
+              match.matchInfo.status,
 
-            matchType:
-              item.matchInfo.matchFormat,
-
-            team1:
-              item.matchInfo.team1.teamName,
-
-            team2:
-              item.matchInfo.team2.teamName,
-
-            date:
-              item.matchInfo.startDate
+            format:
+              match.matchInfo.matchFormat
 
           });
 
@@ -137,7 +110,7 @@ async function saveLiveMatches() {
     .doc("matches")
     .set({
 
-      list: matches,
+      list,
 
       updated:
         new Date().toISOString()
@@ -145,14 +118,12 @@ async function saveLiveMatches() {
     });
 
   console.log(
-
-    "Live Matches:",
-
-    matches.length
-
+    `Live Matches Saved : ${list.length}`
   );
 
-  // ======================================
+}
+
+// ======================================
 // Sync Score
 // ======================================
 
@@ -162,167 +133,146 @@ async function syncScore() {
 
     await saveLiveMatches();
 
-    const MATCH_ID =
-      await getSelectedMatchId();
+    const MATCH_ID = await getSelectedMatchId();
 
-    console.log(
-      "Selected Match:",
-      MATCH_ID
+    console.log("Selected Match:", MATCH_ID);
+
+    const json = await rapidRequest(
+      `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${MATCH_ID}/hscard`
     );
 
-    const url =
-      `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${MATCH_ID}/hscard`;
-
-    const json =
-      await rapidRequest(url);
-
-    if (
-      !json.scorecard ||
-      json.scorecard.length === 0
-    ) {
-
-      console.log(
-        "Scorecard not found"
-      );
-
+    if (!json.scorecard || !json.scorecard.length) {
+      console.log("Scorecard not found");
       return;
-
     }
 
     const innings =
-      json.scorecard[
-        json.scorecard.length - 1
-      ];
+      json.scorecard[json.scorecard.length - 1];
 
-    let runs =
-      innings.score || 0;
-
-    let wickets =
-      innings.wickets || 0;
-
-    let overs =
-      innings.overs || 0;
+    const runs = innings.score || 0;
+    const wickets = innings.wickets || 0;
+    const overs = innings.overs || 0;
 
     const batsmen =
-      innings.batsman || [];
-
-    console.log("BATSMEN DATA:");
-console.log(JSON.stringify(batsmen, null, 2));
+      innings.batsman ||
+      innings.batsmen ||
+      [];
 
     const bowlers =
-      innings.bowler || [];
-
-    console.log("BOWLER DATA:");
-console.log(JSON.stringify(bowlers, null, 2));
+      innings.bowler ||
+      innings.bowlers ||
+      [];
 
     const partnerships =
       innings.partnership?.partnership || [];
 
-    const notOut = batsmen.filter(player => {
-  const status =
-    player.outdec ||
-    player.outDesc ||
-    player.status ||
-    "";
+    const striker =
+      batsmen.find(x =>
+        (x.outdec || "").toLowerCase() === "not out"
+      ) || batsmen[0] || null;
 
-  return !status.toLowerCase().includes("out");
-});
+    const nonStriker =
+      batsmen.filter(x =>
+        (x.outdec || "").toLowerCase() === "not out"
+      )[1] || batsmen[1] || null;
+
+    const currentBowler =
+      bowlers[0] || null;
 
     const currentPartnership =
-      partnerships.length > 0
-
-        ? partnerships[
-            partnerships.length - 1
-          ]
-
+      partnerships.length
+        ? partnerships[partnerships.length - 1]
         : null;
 
-        const scoreboard = {
+  const scoreboard = {
 
-      matchId: MATCH_ID,
+  matchId: MATCH_ID,
 
-      match:
-        json.matchHeader?.matchDescription || "",
+  match:
+    json.matchHeader?.matchDescription || "",
 
-      status:
-        json.status || "",
+  status:
+    json.status || "",
 
-      venue:
-        json.venueInfo?.ground || "",
+  venue:
+    json.venueInfo?.ground || "",
 
-      team1:
-        json.matchHeader?.team1?.name || "",
+  team1:
+    json.matchHeader?.team1?.name || "",
 
-      team2:
-        json.matchHeader?.team2?.name || "",
+  team2:
+    json.matchHeader?.team2?.name || "",
 
-      team1Logo:
-        json.matchHeader?.team1?.imageId
-          ? `https://static.cricbuzz.com/a/img/v1/152x152/i1/c${json.matchHeader.team1.imageId}/team.jpg`
-          : "",
+  team1Logo:
+    json.matchHeader?.team1?.imageId
+      ? `https://static.cricbuzz.com/a/img/v1/152x152/i1/c${json.matchHeader.team1.imageId}/team.jpg`
+      : "",
 
-      team2Logo:
-        json.matchHeader?.team2?.imageId
-          ? `https://static.cricbuzz.com/a/img/v1/152x152/i1/c${json.matchHeader.team2.imageId}/team.jpg`
-          : "",
+  team2Logo:
+    json.matchHeader?.team2?.imageId
+      ? `https://static.cricbuzz.com/a/img/v1/152x152/i1/c${json.matchHeader.team2.imageId}/team.jpg`
+      : "",
 
-      runs,
+  runs,
+  wickets,
+  overs,
 
-      wickets,
+  target:
+    innings.target || "",
 
-      overs,
+  batsman1:
+    striker?.name || "",
 
-      target: "",
+  batsman1Runs:
+    striker
+      ? `${striker.runs} (${striker.balls})`
+      : "",
 
-      batsman1:
-        notOut[0]?.name || "",
+  batsman2:
+    nonStriker?.name || "",
 
-      batsman1Runs:
-        notOut[0]
-          ? `${notOut[0].runs} (${notOut[0].balls})`
-          : "",
+  batsman2Runs:
+    nonStriker
+      ? `${nonStriker.runs} (${nonStriker.balls})`
+      : "",
 
-      batsman2:
-        notOut[1]?.name || "",
+  bowler:
+    currentBowler?.name || "",
 
-      batsman2Runs:
-        notOut[1]
-          ? `${notOut[1].runs} (${notOut[1].balls})`
-          : "",
+  bowlerFigures:
+    currentBowler
+      ? `${currentBowler.wickets}/${currentBowler.runs}`
+      : "",
 
-      bowler:
-        bowlers[0]?.name || "",
+  crr:
+    innings.runRate?.toString() ||
+    innings.runrate?.toString() ||
+    "",
 
-      bowlerFigures:
-        bowlers[0]
-          ? `${bowlers[0].wickets}/${bowlers[0].runs}`
-          : "",
+  rrr:
+    innings.requiredRunRate?.toString() || "",
 
-      crr:
-        innings.runrate?.toString() || "",
+  lastOver:
+    innings.lastOver || "",
 
-      rrr: "",
+  partnership:
+    currentPartnership
+      ? `${currentPartnership.totalruns} (${currentPartnership.totalballs})`
+      : "",
 
-      lastOver: "",
+  matchPhase:
+    overs < 6
+      ? "Powerplay"
+      : overs < 15
+      ? "Middle Overs"
+      : "Death Overs",
 
-      partnership:
-        currentPartnership
-          ? `${currentPartnership.totalruns} (${currentPartnership.totalballs})`
-          : "",
+  updated:
+    new Date().toISOString()
 
-      matchPhase:
-        overs < 6
-          ? "Powerplay"
-          : overs < 15
-          ? "Middle Overs"
-          : "Death Overs",
+};
 
-      updated:
-        new Date().toISOString()
-
-    };
-
-        console.log("===== SCOREBOARD =====");
+      console.log("===== SCOREBOARD =====");
     console.log(JSON.stringify(scoreboard, null, 2));
 
     await db
@@ -338,13 +288,17 @@ console.log(JSON.stringify(bowlers, null, 2));
 
   } catch (err) {
 
+    console.error("SYNC ERROR:");
     console.error(err);
+
     process.exit(1);
 
   }
 
 }
 
-syncScore();
+// ======================================
+// Start Sync
+// ======================================
 
-}
+syncScore();
