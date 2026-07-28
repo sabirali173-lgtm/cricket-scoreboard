@@ -206,6 +206,9 @@ async function syncScore() {
     const batsmen =
       innings.batsman || [];
 
+    console.log("BATSMEN DATA:");
+console.log(JSON.stringify(batsmen, null, 2));
+
     const bowlers =
       innings.bowler || [];
 
