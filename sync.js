@@ -27,6 +27,9 @@ async function rapidRequest(url) {
     headers: {
       "x-rapidapi-key": process.env.API_KEY,
       "x-rapidapi-host": API_HOST
+        
+      console.log("API KEY EXISTS:", !!process.env.API_KEY);
+console.log("API KEY LENGTH:", process.env.API_KEY?.length);
     }
   });
 
