@@ -1,178 +1,17 @@
-import admin from "firebase-admin";
+const innings = json.scorecard?.[json.scorecard.length - 1];
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+const batsmen = innings?.batsman || [];
+const bowlers = innings?.bowler || [];
+const partnerships = innings?.partnership?.partnership || [];
 
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
-
-const db = admin.firestore();
-
-// ===============================
-// Read Selected Match ID
-// ===============================
-async function getSelectedMatchId() {
-
-  const docRef = await db
-    .collection("scoreboard")
-    .doc("settings")
-    .get();
-
-  if (!docRef.exists) {
-    throw new Error("settings document not found");
-  }
-
-  return docRef.data().selectedMatchId;
-
-}
-
-// ===============================
-// Load Matches From CricAPI
-// ===============================
-async function saveLiveMatches() {
-
-  const url =
-    `https://api.cricapi.com/v1/currentMatches?apikey=${process.env.API_KEY}&offset=0`;
-
-  console.log("Fetching Live Matches...");
-
-  const res = await fetch(url);
-  const json = await res.json();
-
-  if (json.status !== "success") {
-
-    console.log("API Error:", json.reason);
-    return;
-
-  }
-
-  const matches = (json.data || []).map(match => ({
-
-    id: match.id,
-
-    name: match.name,
-
-    status: match.status,
-
-    matchType: match.matchType || "",
-
-    team1: match.teams?.[0] || "",
-
-    team2: match.teams?.[1] || "",
-
-    date: match.date || ""
-
-  }));
-
-  await db.collection("scoreboard").doc("matches").set({
-
-    list: matches,
-
-    updated: new Date().toISOString()
-
-  });
-
-  console.log("================================");
-  console.log("Matches Returned:", matches.length);
-
-  matches.forEach(m => {
-
-    console.log(`${m.name} | ${m.status}`);
-
-  });
-
-  console.log("================================");
-
-}
-
-// ===============================
-// Sync Score
-// ===============================
-async function syncScore() {
-
-  try {
-
-    console.log("API KEY LENGTH:", process.env.API_KEY?.length);
-
-    await saveLiveMatches();
-
-    const MATCH_ID = await getSelectedMatchId();
-
-    console.log("Selected Match ID:", MATCH_ID);
-
-    const url =
-      `https://api.cricapi.com/v1/match_info?apikey=${process.env.API_KEY}&id=${MATCH_ID}`;
-
-    console.log(
-      "Fetching:",
-      url.replace(process.env.API_KEY, "***")
-    );
-
-    const response = await fetch(url);
-
-    const json = await response.json();
-
-    if (json.status !== "success") {
-
-      console.log("API Error:", json.reason);
-
-      return;
-
-    }
-
-    const match = json.data;
-
-      let runs = 0;
-    let wickets = 0;
-    let overs = 0;
-
-    if (Array.isArray(match.score) && match.score.length > 0) {
-
-      const innings = match.score[match.score.length - 1];
-
-      runs = innings.r ?? 0;
-      wickets = innings.w ?? 0;
-      overs = innings.o ?? 0;
-
-    }
-
-    const scoreboard = {
-
-      matchId: MATCH_ID,
-
-      team1: match.teams?.[0] || "",
-      team2: match.teams?.[1] || "",
-
-      team1Logo: match.teamInfo?.[0]?.img || "",
-      team2Logo: match.teamInfo?.[1]?.img || "",
-
-      match: match.name || "",
-      status: match.status || "",
-
-      venue: match.venue || "",
-
-      tossWinner: match.tossWinner || "",
-      tossChoice: match.tossChoice || "",
-      matchWinner: match.matchWinner || "",
-
-      runs,
-      wickets,
-      overs,
-
-      target: match.target || "",
-
-     const innings = json.scorecard[json.scorecard.length - 1];
-
-const batsmen = innings.batsman.filter(
-  b => b.outdec === "not out"
+const notOut = batsmen.filter(
+  b => b.outdec && b.outdec.toLowerCase().includes("not out")
 );
 
-const currentBowler = innings.bowler[0];
-
-const lastPartnership =
-  innings.partnership?.partnership?.[
-    innings.partnership.partnership.length - 1
-  ];
+const currentPartnership =
+  partnerships.length > 0
+    ? partnerships[partnerships.length - 1]
+    : null;
 
 const scoreboard = {
 
@@ -185,7 +24,7 @@ const scoreboard = {
   team2Logo: match.teamInfo?.[1]?.img || "",
 
   match: match.name || "",
-  status: match.status || "",
+  status: json.status || "",
 
   venue: match.venue || "",
 
@@ -193,72 +32,41 @@ const scoreboard = {
   tossChoice: match.tossChoice || "",
   matchWinner: match.matchWinner || "",
 
-  runs,
-  wickets,
-  overs,
+  runs: innings?.score || 0,
+  wickets: innings?.wickets || 0,
+  overs: innings?.overs || 0,
 
   target: match.target || "",
 
-  batsman1: batsmen[0]?.name || "",
-  batsman1Runs:
-    `${batsmen[0]?.runs || 0} (${batsmen[0]?.balls || 0})`,
+  batsman1: notOut[0]?.name || "",
+  batsman1Runs: notOut[0]?.runs || 0,
+  batsman1Balls: notOut[0]?.balls || 0,
 
-  batsman2: batsmen[1]?.name || "",
-  batsman2Runs:
-    `${batsmen[1]?.runs || 0} (${batsmen[1]?.balls || 0})`,
+  batsman2: notOut[1]?.name || "",
+  batsman2Runs: notOut[1]?.runs || 0,
+  batsman2Balls: notOut[1]?.balls || 0,
 
-  bowler: currentBowler?.name || "",
+  bowler: bowlers[0]?.name || "",
   bowlerFigures:
-    `${currentBowler?.wickets || 0}/${currentBowler?.runs || 0}`,
+    `${bowlers[0]?.overs || 0}-${bowlers[0]?.wickets || 0}-${bowlers[0]?.runs || 0}`,
 
-  crr: innings.runrate || "",
+  crr: innings?.runrate || "",
 
-  partnership: lastPartnership
-      ? `${lastPartnership.totalruns} (${lastPartnership.totalballs})`
-      : "",
-
-  rrr: "",
+  partnership: currentPartnership
+    ? `${currentPartnership.totalruns} (${currentPartnership.totalballs})`
+    : "",
 
   lastOver: "",
 
+  rrr: "",
+
   matchPhase:
-      overs < 6
-        ? "Powerplay"
-        : overs < 15
-        ? "Middle Overs"
-        : "Death Overs",
+    innings?.overs < 6
+      ? "Powerplay"
+      : innings?.overs < 15
+      ? "Middle Overs"
+      : "Death Overs",
 
   updated: new Date().toISOString()
+
 };
-
-      matchPhase: "",
-
-      updated: new Date().toISOString()
-
-    };
-
-    console.log("===== SCOREBOARD =====");
-    console.log(JSON.stringify(scoreboard, null, 2));
-
-    await db
-      .collection("scoreboard")
-      .doc("live")
-      .set(scoreboard, {
-        merge: true,
-      });
-
-    console.log("================================");
-    console.log("Firebase Updated Successfully");
-    console.log(scoreboard);
-    console.log("================================");
-
-  } catch (err) {
-
-    console.error(err);
-    process.exit(1);
-
-  }
-
-}
-
-syncScore();
