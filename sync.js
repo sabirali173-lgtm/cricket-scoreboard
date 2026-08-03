@@ -1,4 +1,4 @@
-// sync.js - node-fetch version
+// sync.js - Complete Fixed Version
 import admin from 'firebase-admin';
 import fetch from 'node-fetch';
 
@@ -26,7 +26,7 @@ const RAPIDAPI_HEADERS = {
 };
 
 // ===============================
-// Helper Functions (using fetch)
+// Helper Functions
 // ===============================
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -49,6 +49,44 @@ const apiCall = async (url, retries = 2) => {
         }
     }
 };
+
+// ===============================
+// Extract Match ID from Live Data
+// ===============================
+function extractMatchId(liveData, selectedMatchId) {
+    // Try different possible structures
+    const matches = liveData.matches || liveData.matchList || liveData.data || [];
+    
+    // If matches is not an array, try to find it
+    let matchArray = [];
+    if (Array.isArray(matches)) {
+        matchArray = matches;
+    } else if (typeof matches === 'object') {
+        // Sometimes the data is nested deeper
+        matchArray = Object.values(matches).flat();
+    }
+    
+    console.log(`🔍 Found ${matchArray.length} matches in live data`);
+    
+    // Find the match
+    const match = matchArray.find(m => 
+        m.id === selectedMatchId || 
+        m.matchId === selectedMatchId ||
+        m.match_id === selectedMatchId ||
+        String(m.id) === String(selectedMatchId)
+    );
+    
+    return match;
+}
+
+// ===============================
+// Get Correct Match ID Format
+// ===============================
+function getCricbuzzMatchId(match) {
+    // Cricbuzz API uses numeric IDs for hscard endpoint
+    // The ID from live matches might be different
+    return match.matchId || match.id || match.match_id;
+}
 
 // ===============================
 // Main Sync Function
@@ -82,37 +120,51 @@ async function syncCricketData() {
         }
         console.log(`✅ Selected match ID: ${selectedMatchId}`);
 
-        // Step 3: Get Match Details
-        console.log('\n🏏 Fetching match details...');
-        let matchDetails = null;
+        // Step 3: Find match in live data
+        const match = extractMatchId(liveData, selectedMatchId);
         
-        // Try hscard endpoint first
-        try {
-            matchDetails = await apiCall(`https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${selectedMatchId}/hscard`);
-            console.log('✅ HSCARD endpoint success');
-        } catch (error) {
-            console.log('⚠️ HSCARD failed, trying scard...');
-            try {
-                matchDetails = await apiCall(`https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${selectedMatchId}/scard`);
-                console.log('✅ SCARD endpoint success');
-            } catch (error2) {
-                console.log('⚠️ SCARD also failed');
-                // Try to find match in live data
-                const matches = liveData.matches || liveData || [];
-                const match = matches.find(m => m.id === selectedMatchId || m.matchId === selectedMatchId);
-                if (match) {
-                    matchDetails = match;
-                    console.log('✅ Found match in live data');
-                }
-            }
-        }
-
-        if (!matchDetails) {
-            console.log('❌ No match details found');
+        if (!match) {
+            console.log('❌ Match not found in live data');
+            console.log('📋 Available matches:', Object.keys(liveData));
             return;
         }
 
-        // Step 4: Process and Store
+        // Step 4: Get the correct match ID format
+        const cricbuzzMatchId = getCricbuzzMatchId(match);
+        console.log(`🔑 Cricbuzz Match ID: ${cricbuzzMatchId}`);
+
+        // Step 5: Get Match Details
+        console.log('\n🏏 Fetching match details...');
+        let matchDetails = null;
+        
+        // Try with numeric ID first (Cricbuzz expects numeric)
+        const numericId = parseInt(cricbuzzMatchId) || cricbuzzMatchId;
+        
+        // Try multiple endpoints with both ID formats
+        const endpointsToTry = [
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${numericId}/hscard`,
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${cricbuzzMatchId}/hscard`,
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${numericId}/scard`,
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${cricbuzzMatchId}/scard`
+        ];
+
+        for (const endpoint of endpointsToTry) {
+            try {
+                matchDetails = await apiCall(endpoint);
+                console.log(`✅ Endpoint success: ${endpoint}`);
+                break;
+            } catch (error) {
+                console.log(`⚠️ Endpoint failed: ${endpoint}`);
+            }
+        }
+
+        // If all endpoints fail, use the match data from live
+        if (!matchDetails) {
+            console.log('⚠️ Using match data from live matches');
+            matchDetails = match;
+        }
+
+        // Step 6: Process and Store
         console.log('\n💾 Processing match data...');
         const processedData = {
             teams: {
@@ -129,9 +181,14 @@ async function syncCricketData() {
             runRate: matchDetails.runRate || matchDetails.crr || 0,
             requiredRunRate: matchDetails.requiredRunRate || matchDetails.rrr || 0,
             matchPhase: matchDetails.matchPhase || matchDetails.status || 'Live',
+            matchResult: matchDetails.result || '',
+            venue: matchDetails.venue || '',
+            tossWinner: matchDetails.tossWinner || '',
+            tossDecision: matchDetails.tossDecision || '',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         };
 
+        // Store in Firebase
         await db.collection('scoreboard').doc('live').set(processedData, { merge: true });
         console.log('✅ Match data stored successfully');
 
