@@ -1,208 +1,157 @@
-import {
-    db,
-    doc,
-    onSnapshot
-} from "./firebase.js";
-
-const scoreRef = doc(db, "scoreboard", "live");
+// sync.js - node-fetch version
+import admin from 'firebase-admin';
+import fetch from 'node-fetch';
 
 // ===============================
-// Live Firebase Listener
+// Firebase Initialization
 // ===============================
-onSnapshot(scoreRef, (snapshot) => {
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
-    if (!snapshot.exists()) return;
+if (!admin.apps.length) {
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+    });
+}
 
-    const data = snapshot.data();
+const db = admin.firestore();
 
-    console.log("LIVE SCORE:", data);
+// ===============================
+// Configuration
+// ===============================
+const API_KEY = process.env.API_KEY;
+const RAPIDAPI_HEADERS = {
+    'x-rapidapi-key': API_KEY,
+    'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com',
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+};
 
-    // ===============================
-    // Teams
-    // ===============================
-    document.getElementById("team1").textContent =
-        data.team1 || "";
+// ===============================
+// Helper Functions (using fetch)
+// ===============================
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    document.getElementById("team2").textContent =
-        data.team2 || "";
-
-    // ===============================
-    // Team Logos
-    // ===============================
-    if (document.getElementById("team1Logo")) {
-
-        document.getElementById("team1Logo").src =
-            data.team1Logo || "";
-
+const apiCall = async (url, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+        try {
+            console.log(`📡 Fetching: ${url}`);
+            const response = await fetch(url, { headers: RAPIDAPI_HEADERS });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(`❌ Attempt ${i + 1} failed:`, error.message);
+            if (i === retries) throw error;
+            await delay(2000 * (i + 1));
+        }
     }
+};
 
-    if (document.getElementById("team2Logo")) {
+// ===============================
+// Main Sync Function
+// ===============================
+async function syncCricketData() {
+    try {
+        console.log('🚀 Starting Cricket Data Sync...');
+        console.log(`📝 API Key exists: ${!!API_KEY}`);
+        console.log(`📝 API Key length: ${API_KEY?.length || 0}`);
+        console.log(`📝 Firebase initialized: ${admin.apps.length > 0}`);
 
-        document.getElementById("team2Logo").src =
-            data.team2Logo || "";
+        // Step 1: Get Live Matches
+        console.log('\n📊 Fetching live matches...');
+        const liveData = await apiCall('https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live');
+        
+        // Store matches
+        await db.collection('scoreboard').doc('matches').set({
+            data: liveData,
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        });
+        console.log('✅ Live matches stored');
 
+        // Step 2: Get Selected Match
+        console.log('\n📋 Fetching settings...');
+        const settingsDoc = await db.collection('scoreboard').doc('settings').get();
+        const selectedMatchId = settingsDoc.data()?.selectedMatchId;
+
+        if (!selectedMatchId) {
+            console.log('⚠️ No match selected in settings');
+            return;
+        }
+        console.log(`✅ Selected match ID: ${selectedMatchId}`);
+
+        // Step 3: Get Match Details
+        console.log('\n🏏 Fetching match details...');
+        let matchDetails = null;
+        
+        // Try hscard endpoint first
+        try {
+            matchDetails = await apiCall(`https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${selectedMatchId}/hscard`);
+            console.log('✅ HSCARD endpoint success');
+        } catch (error) {
+            console.log('⚠️ HSCARD failed, trying scard...');
+            try {
+                matchDetails = await apiCall(`https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${selectedMatchId}/scard`);
+                console.log('✅ SCARD endpoint success');
+            } catch (error2) {
+                console.log('⚠️ SCARD also failed');
+                // Try to find match in live data
+                const matches = liveData.matches || liveData || [];
+                const match = matches.find(m => m.id === selectedMatchId || m.matchId === selectedMatchId);
+                if (match) {
+                    matchDetails = match;
+                    console.log('✅ Found match in live data');
+                }
+            }
+        }
+
+        if (!matchDetails) {
+            console.log('❌ No match details found');
+            return;
+        }
+
+        // Step 4: Process and Store
+        console.log('\n💾 Processing match data...');
+        const processedData = {
+            teams: {
+                team1: matchDetails.team1 || matchDetails.team1Name || { name: 'Team 1' },
+                team2: matchDetails.team2 || matchDetails.team2Name || { name: 'Team 2' }
+            },
+            score: {
+                team1: matchDetails.score?.team1 || matchDetails.team1Score || { runs: 0, wickets: 0, overs: '0.0' },
+                team2: matchDetails.score?.team2 || matchDetails.team2Score || { runs: 0, wickets: 0, overs: '0.0' }
+            },
+            batsmen: matchDetails.batsmen || matchDetails.batsman || [],
+            bowler: matchDetails.bowler || matchDetails.bowlers || { name: '', figures: '' },
+            partnership: matchDetails.partnership || { runs: 0, balls: 0 },
+            runRate: matchDetails.runRate || matchDetails.crr || 0,
+            requiredRunRate: matchDetails.requiredRunRate || matchDetails.rrr || 0,
+            matchPhase: matchDetails.matchPhase || matchDetails.status || 'Live',
+            lastUpdated: admin.firestore.FieldValue.serverTimestamp()
+        };
+
+        await db.collection('scoreboard').doc('live').set(processedData, { merge: true });
+        console.log('✅ Match data stored successfully');
+
+        console.log('\n🎉 Sync completed successfully!');
+
+    } catch (error) {
+        console.error('\n❌ Fatal error:', error.message);
+        if (error.stack) {
+            console.error('Stack:', error.stack);
+        }
+        throw error;
     }
+}
 
-    // ===============================
-    // Score
-    // ===============================
-    document.getElementById("runs").textContent =
-        data.runs ?? 0;
-
-    document.getElementById("wickets").textContent =
-        data.wickets ?? 0;
-
-    document.getElementById("overs").textContent =
-        data.overs ?? "0.0";
-
-    // ===============================
-    // Run Rates
-    // ===============================
-    if (document.getElementById("crr")) {
-
-        document.getElementById("crr").textContent =
-            data.crr || "-";
-
-    }
-
-    if (document.getElementById("rrr")) {
-
-        document.getElementById("rrr").textContent =
-            data.rrr || "-";
-
-    }
-      // ===============================
-    // Batsmen
-    // ===============================
-    if (document.getElementById("batsman1")) {
-
-        document.getElementById("batsman1").textContent =
-            data.batsman1 || "-";
-
-    }
-
-    if (document.getElementById("batsman1Runs")) {
-
-        document.getElementById("batsman1Runs").textContent =
-            data.batsman1Runs || "0 (0)";
-
-    }
-
-    if (document.getElementById("batsman2")) {
-
-        document.getElementById("batsman2").textContent =
-            data.batsman2 || "-";
-
-    }
-
-    if (document.getElementById("batsman2Runs")) {
-
-        document.getElementById("batsman2Runs").textContent =
-            data.batsman2Runs || "0 (0)";
-
-    }
-
-    // ===============================
-    // Bowler
-    // ===============================
-    if (document.getElementById("bowler")) {
-
-        document.getElementById("bowler").textContent =
-            data.bowler || "-";
-
-    }
-
-    if (document.getElementById("bowlerFigures")) {
-
-        document.getElementById("bowlerFigures").textContent =
-            data.bowlerFigures || "-";
-
-    }
-
-    // ===============================
-    // Match Information
-    // ===============================
-    if (document.getElementById("target")) {
-
-        document.getElementById("target").textContent =
-            data.target || "-";
-
-    }
-
-    if (document.getElementById("status")) {
-
-        document.getElementById("status").textContent =
-            data.status || "";
-
-    }
-
-    if (document.getElementById("venue")) {
-
-        document.getElementById("venue").textContent =
-            data.venue || "";
-
-    }
-
-    if (document.getElementById("toss")) {
-
-        document.getElementById("toss").textContent =
-            data.toss ||
-            `${data.tossWinner || ""} ${data.tossChoice || ""}`;
-
-    }
-      // ===============================
-    // Last Over
-    // ===============================
-    if (document.getElementById("lastOver")) {
-
-        document.getElementById("lastOver").textContent =
-            data.lastOver || "-";
-
-    }
-
-    // ===============================
-    // Partnership
-    // ===============================
-    if (document.getElementById("partnership")) {
-
-        document.getElementById("partnership").textContent =
-            data.partnership || "-";
-
-    }
-
-    // ===============================
-    // Match Phase
-    // ===============================
-    if (document.getElementById("matchPhase")) {
-
-        document.getElementById("matchPhase").textContent =
-            data.matchPhase || "-";
-
-    }
-
-    // ===============================
-    // Match Name
-    // ===============================
-    if (document.getElementById("match")) {
-
-        document.getElementById("match").textContent =
-            data.match || "";
-
-    }
-
-    // ===============================
-    // Updated Time
-    // ===============================
-    if (document.getElementById("updated")) {
-
-        const time = data.updated
-            ? new Date(data.updated).toLocaleTimeString()
-            : "--";
-
-        document.getElementById("updated").textContent = time;
-
-    }
-
-    console.log("Overlay Updated Successfully");
-
-});
+// ===============================
+// Execute
+// ===============================
+syncCricketData()
+    .then(() => process.exit(0))
+    .catch((error) => {
+        console.error('🔥 Sync failed:', error.message);
+        process.exit(1);
+    });
