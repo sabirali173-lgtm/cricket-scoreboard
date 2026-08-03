@@ -1,144 +1,98 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html>
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>OBS Cricket Scoreboard</title>
-
-<link rel="stylesheet" href="style.css">
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Cricket Scoreboard</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
-
-<div class="extra-info">
-
-    <div><b>RRR :</b> <span id="rrr">0.00</span></div>
-
-    <div><b>Last Over :</b> <span id="lastOver">-</span></div>
-
-    <div><b>Partnership :</b> <span id="partnership">-</span></div>
-
-    <div><b>Match Phase :</b> <span id="matchPhase">-</span></div>
-
-    <div><b>Toss :</b> <span id="toss">-</span></div>
-
-</div>
-
-<div class="scoreboard">
-
-    <div class="top-bar">
-
-        <div class="team left">
-
-            <img id="team1Logo" class="team-logo" src="" alt="">
-
-            <span id="team1">Team 1</span>
-
+    <div id="scoreboard">
+        <!-- Header -->
+        <div id="matchHeader">
+            <h1 id="matchTitle">Team A vs Team B</h1>
+            <span id="matchStatus">🟢 LIVE</span>
+            <span id="matchVenue">Venue</span>
         </div>
 
-        <div class="score-box">
-
-            <div class="live">🔴 LIVE</div>
-
-            <div class="score">
-                <span id="runs">0</span>/<span id="wickets">0</span>
+        <!-- Main Score -->
+        <div id="mainScore">
+            <div id="team1Section">
+                <img id="team1Logo" src="" alt="Team 1 Logo">
+                <span id="team1Name">Team 1</span>
+                <span id="team1Score">0</span>
+                <span id="team1Wickets">0</span>
+                <span id="team1Overs">0.0</span>
+                <span id="team1RunRate">0.00</span>
             </div>
-
-            <div class="overs">
-                (<span id="overs">0.0</span> Overs)
+            
+            <div id="team2Section">
+                <img id="team2Logo" src="" alt="Team 2 Logo">
+                <span id="team2Name">Team 2</span>
+                <span id="team2Score">0</span>
+                <span id="team2Wickets">0</span>
+                <span id="team2Overs">0.0</span>
+                <span id="team2RunRate">0.00</span>
             </div>
+        </div>
 
-            <div class="crr">
-                CRR :
-                <span id="crr">0.00</span>
+        <!-- Batsmen -->
+        <div id="batsmenInfo">
+            <div id="batsman1">
+                <span id="batsman1Name">Batsman 1</span>
+                <span id="batsman1Runs">0</span>
+                <span id="batsman1Balls">0</span>
+                <span id="batsman1Fours">0</span>
+                <span id="batsman1Sixes">0</span>
+                <span id="batsman1StrikeRate">0.00</span>
             </div>
-
+            <div id="batsman2">
+                <span id="batsman2Name">Batsman 2</span>
+                <span id="batsman2Runs">0</span>
+                <span id="batsman2Balls">0</span>
+                <span id="batsman2Fours">0</span>
+                <span id="batsman2Sixes">0</span>
+                <span id="batsman2StrikeRate">0.00</span>
+            </div>
         </div>
 
-        <div class="team right">
-
-            <img id="team2Logo" class="team-logo" src="" alt="">
-
-            <span id="team2">Team 2</span>
-
+        <!-- Bowler -->
+        <div id="bowlerInfo">
+            <span id="bowlerName">Bowler</span>
+            <span id="bowlerOvers">0.0</span>
+            <span id="bowlerRuns">0</span>
+            <span id="bowlerWickets">0</span>
+            <span id="bowlerEconomy">0.00</span>
         </div>
 
+        <!-- Partnership & Required -->
+        <div id="extraInfo">
+            <span id="partnershipRuns">0</span>
+            <span id="partnershipBalls">0</span>
+            <span id="requiredRuns">0</span>
+            <span id="requiredBalls">0</span>
+            <span id="requiredRunRate">0.00</span>
+        </div>
+
+        <!-- Match Phase -->
+        <div id="matchPhase"></div>
+        <div id="matchResult"></div>
+
+        <!-- Last Updated -->
+        <div id="lastUpdated">--:--:--</div>
+        
+        <!-- Error Message -->
+        <div id="errorMessage" style="display:none;"></div>
     </div>
 
-    <div class="middle">
-
-        <div class="player">
-
-            <div class="title">Batsman 1</div>
-
-            <div id="batsman1">-</div>
-
-            <div id="batsman1Runs">0 (0)</div>
-
-        </div>
-
-        <div class="player">
-
-            <div class="title">Batsman 2</div>
-
-            <div id="batsman2">-</div>
-
-            <div id="batsman2Runs">0 (0)</div>
-
-        </div>
-
-    </div>
-
-    <div class="bottom">
-
-        <div>
-            <b>Bowler :</b>
-            <span id="bowler">-</span>
-        </div>
-
-        <div>
-            <b>Figures :</b>
-            <span id="bowlerFigures">-</span>
-        </div>
-
-        <div>
-            <b>Target :</b>
-            <span id="target">-</span>
-        </div>
-
-        <div>
-            <b>Status :</b>
-            <span id="status">-</span>
-        </div>
-
-    </div>
-
-    <div class="match-info">
-
-        <div>
-            <b>Match :</b>
-            <span id="match">-</span>
-        </div>
-
-        <div>
-            <b>Venue :</b>
-            <span id="venue">-</span>
-        </div>
-
-        <div>
-            <b>Updated :</b>
-            <span id="updated">--:--:--</span>
-        </div>
-
-    </div>
-
-</div>
-
-<script type="module" src="script.js"></script>
-
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase": "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js"
+        }
+    }
+    </script>
+    <script type="module" src="script.js"></script>
 </body>
 </html>
