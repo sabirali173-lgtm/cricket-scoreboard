@@ -1,12 +1,10 @@
-name: Sync Cricket Data
+name: Debug API Response
 
 on:
-  schedule:
-    - cron: '*/5 * * * *'
-  workflow_dispatch:
+  workflow_dispatch:  # Manual run
 
 jobs:
-  sync:
+  debug:
     runs-on: ubuntu-latest
     
     steps:
@@ -17,12 +15,10 @@ jobs:
       with:
         node-version: '18'
     
-    # ✅ IMPORTANT: Yeh step add karo
     - name: Install Dependencies
-      run: npm install
+      run: npm install node-fetch
     
-    - name: Sync Cricket Data
+    - name: Run Debug Script
       env:
         API_KEY: ${{ secrets.API_KEY }}
-        FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-      run: node sync.js
+      run: node debug.js
