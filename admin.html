@@ -1,17 +1,296 @@
-<!-- Live Match Information ke neeche yeh add karein -->
-<div class="action-section" style="margin-top: 20px; background: #1a1a2e; padding: 15px; border-radius: 10px;">
-    <h3 style="color: #4caf50;">⚡ Update Live Action</h3>
-    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-        <button onclick="updateAction('0')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">0</button>
-        <button onclick="updateAction('1')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">1</button>
-        <button onclick="updateAction('2')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">2</button>
-        <button onclick="updateAction('3')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">3</button>
-        <button onclick="updateAction('4')" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">4</button>
-        <button onclick="updateAction('6')" style="background: #FF9800; color: black; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">6</button>
-        
-        <!-- Aapki demand ke mutabiq '7' number ka button -->
-        <button onclick="updateAction('7')" style="background: #9C27B0; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">7</button>
-        
-        <button onclick="updateAction('W')" style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">W</button>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Scoreboard Admin</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background: #0a0a1a; color: #fff; padding: 20px; min-height: 100vh; }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        /* HEADER */
+        h1 { text-align: center; color: #00ffcc; margin-bottom: 20px; font-size: 32px; }
+        hr { border: 1px solid #222; margin-bottom: 20px; }
+
+        /* SECTIONS */
+        .section { background: #16162e; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #2a2a4a; }
+        h3 { color: #4a9eff; margin-bottom: 15px; display: flex; align-items: center; gap: 10px; font-size: 20px; }
+
+        /* INPUTS & BUTTONS */
+        input, select {
+            width: 100%; padding: 12px; margin-top: 5px; margin-bottom: 15px;
+            background: #0f0f23; border: 1px solid #2a2a4a; border-radius: 8px;
+            color: #fff; font-size: 16px; outline: none; transition: 0.3s;
+        }
+        input:focus, select:focus { border-color: #00ff88; box-shadow: 0 0 8px rgba(0, 255, 136, 0.2); }
+
+        .btn-green {
+            width: 100%; padding: 12px; border: none; border-radius: 8px;
+            background: #00d169; color: #000; font-weight: bold; font-size: 16px; cursor: pointer;
+            transition: 0.2s; margin-bottom: 10px;
+        }
+        .btn-green:hover { background: #00ff88; transform: scale(1.01); }
+
+        .row { display: flex; gap: 20px; }
+        .col { flex: 1; }
+
+        /* ACTION BUTTONS (4,6,7,W) */
+        .action-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+        .action-buttons button {
+            flex: 1; min-width: 60px; padding: 15px 0; border: none; border-radius: 10px;
+            background: #2a2a4a; color: #fff; font-size: 22px; font-weight: bold; cursor: pointer;
+            transition: 0.2s;
+        }
+        .action-buttons button:hover { transform: scale(1.05); background: #3a3a5a; }
+        .btn-four { background: #2196F3 !important; color: #fff !important; }
+        .btn-six { background: #FF9800 !important; color: #000 !important; }
+        .btn-seven { background: #9C27B0 !important; color: #fff !important; }
+        .btn-w { background: #f44336 !important; color: #fff !important; }
+
+        /* BOWLER & BATSMEN ROW */
+        .flex-row { display: flex; gap: 10px; align-items: center; }
+        .flex-row div { flex: 1; text-align: center; }
+        .flex-row input { text-align: center; padding: 10px; margin-bottom: 5px; font-size: 14px; }
+        .flex-row label { font-size: 12px; color: #aaa; }
+
+        .btn-save { width: 100%; padding: 15px; background: #4a9eff; color: #fff; border: none; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px;}
+        .btn-save:hover { background: #6ab0ff; }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .row { flex-direction: column; }
+            .action-buttons button { min-width: 40px; font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>🏏 Cricket Scoreboard Admin</h1>
+        <hr>
+
+        <!-- SECTION 1: MATCH SELECTOR -->
+        <div class="section">
+            <h3>📺 Live Match Selector</h3>
+            
+            <button id="refreshBtn" onclick="loadMatchesFromFirebase()" class="btn-green">🔄 Refresh Live Matches</button>
+            
+            <select id="matchSelect">
+                <option value="">-- Select a match from Firebase --</option>
+            </select>
+            
+            <button onclick="selectMatch()" class="btn-green">✅ Select Match (Load Stats)</button>
+        </div>
+
+        <!-- SECTION 2: LIVE SCORE INFO -->
+        <div class="section">
+            <h3>📊 Live Match Information</h3>
+            <div class="row">
+                <div class="col">
+                    <label>Team 1 Name</label>
+                    <input type="text" id="t1Name" placeholder="e.g. West Indies">
+                    
+                    <label>Team 1 Score & Overs</label>
+                    <div class="flex-row">
+                        <div><label>Score</label><input type="text" id="t1Score" placeholder="344/10"></div>
+                        <div><label>Overs</label><input type="text" id="t1Overs" placeholder="105.4"></div>
+                    </div>
+                </div>
+                <div class="col">
+                    <label>Team 2 Name</label>
+                    <input type="text" id="t2Name" placeholder="e.g. Pakistan">
+                    
+                    <label>Team 2 Score & Overs</label>
+                    <div class="flex-row">
+                        <div><label>Score</label><input type="text" id="t2Score" placeholder="266/2"></div>
+                        <div><label>Overs</label><input type="text" id="t2Overs" placeholder="65.6"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: LIVE ACTION BUTTONS -->
+        <div class="section">
+            <h3>⚡ Update Live Action</h3>
+            <div class="action-buttons">
+                <button onclick="updateAction('0')">0</button>
+                <button onclick="updateAction('1')">1</button>
+                <button onclick="updateAction('2')">2</button>
+                <button onclick="updateAction('3')">3</button>
+                <button onclick="updateAction('4')" class="btn-four">4</button>
+                <button onclick="updateAction('6')" class="btn-six">6</button>
+                <button onclick="updateAction('7')" class="btn-seven">7</button>
+                <button onclick="updateAction('W')" class="btn-w">W</button>
+            </div>
+        </div>
+
+        <!-- SECTION 4: PLAYERS STATS -->
+        <div class="section">
+            <h3>🏏 Players & Bowler Stats</h3>
+            <div class="row">
+                <!-- Striker -->
+                <div class="col">
+                    <label>Striker (Batsman 1)</label>
+                    <input type="text" id="b1name" placeholder="Name">
+                    <div class="flex-row">
+                        <div><label>R</label><input type="text" id="b1r" placeholder="0"></div>
+                        <div><label>B</label><input type="text" id="b1b" placeholder="0"></div>
+                        <div><label>4s</label><input type="text" id="b1f" placeholder="0"></div>
+                        <div><label>6s</label><input type="text" id="b1s" placeholder="0"></div>
+                        <div><label>SR</label><input type="text" id="b1sr" placeholder="0.00"></div>
+                    </div>
+                </div>
+                <!-- Non-Striker -->
+                <div class="col">
+                    <label>Non-Striker (Batsman 2)</label>
+                    <input type="text" id="b2name" placeholder="Name">
+                    <div class="flex-row">
+                        <div><label>R</label><input type="text" id="b2r" placeholder="0"></div>
+                        <div><label>B</label><input type="text" id="b2b" placeholder="0"></div>
+                        <div><label>4s</label><input type="text" id="b2f" placeholder="0"></div>
+                        <div><label>6s</label><input type="text" id="b2s" placeholder="0"></div>
+                        <div><label>SR</label><input type="text" id="b2sr" placeholder="0.00"></div>
+                    </div>
+                </div>
+                <!-- Bowler -->
+                <div class="col">
+                    <label>Bowler</label>
+                    <input type="text" id="b3name" placeholder="Name">
+                    <div class="flex-row">
+                        <div><label>O</label><input type="text" id="b3o" placeholder="0.0"></div>
+                        <div><label>W</label><input type="text" id="b3w" placeholder="0"></div>
+                        <div><label>R</label><input type="text" id="b3r" placeholder="0"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <button onclick="updateFullMatchStats()" class="btn-save">💾 Update Full Scoreboard & Push to OBS</button>
+        </div>
     </div>
-</div>
+
+    <!-- =============== JAVASCRIPT - FIREBASE INTEGRATION =============== -->
+    <script type="module">
+        // 👇 YAHAN APNI FIREBASE CONFIG KEYS DAALEIN 👇
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getDatabase, ref, set, onValue, get } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const matchSelect = document.getElementById('matchSelect');
+
+        // --- FUNCTION 1: DROPDOWN MEIN MATCHES LOAD KAREIN (FIREBASE SE) ---
+        window.loadMatchesFromFirebase = function() {
+            const matchesRef = ref(db, 'cricket-scoreboard/availableMatches');
+            
+            onValue(matchesRef, (snapshot) => {
+                const data = snapshot.val();
+                matchSelect.innerHTML = '<option value="">-- Select a match --</option>';
+                
+                if (data) {
+                    for (let id in data) {
+                        let match = data[id];
+                        let option = document.createElement('option');
+                        option.value = id;
+                        // Dropdown me team name aur status dikhayen
+                        option.innerText = `${match.title} (${match.status})`;
+                        matchSelect.appendChild(option);
+                    }
+                } else {
+                    alert("Firebase mein koi match nahi mila. Pehle terminal mein 'node debug.js' run karein!");
+                }
+            }, { onlyOnce: true }); // onlyOnce true taaki baar baar reload na ho
+        };
+
+        // --- FUNCTION 2: SELECT MATCH PAR DATA LOAD KAREIN FORM MEIN ---
+        window.selectMatch = async function() {
+            const selectedId = matchSelect.value;
+            if(!selectedId) return alert("Pehle dropdown mein match select karein!");
+
+            const matchRef = ref(db, `cricket-scoreboard/availableMatches/${selectedId}`);
+            const snapshot = await get(matchRef);
+            const matchData = snapshot.val();
+
+            if(matchData) {
+                // Auto fill Teams Name
+                document.getElementById('t1Name').value = matchData.team1 || '';
+                document.getElementById('t2Name').value = matchData.team2 || '';
+            }
+        };
+
+        // --- FUNCTION 3: FULL SCOREBOARD UPDATE FIREBASE PAR ---
+        window.updateFullMatchStats = function() {
+            const data = {
+                team1: {
+                    name: document.getElementById('t1Name').value,
+                    score: document.getElementById('t1Score').value,
+                    overs: document.getElementById('t1Overs').value
+                },
+                team2: {
+                    name: document.getElementById('t2Name').value,
+                    score: document.getElementById('t2Score').value,
+                    overs: document.getElementById('t2Overs').value
+                },
+                striker: {
+                    name: document.getElementById('b1name').value,
+                    r: document.getElementById('b1r').value,
+                    b: document.getElementById('b1b').value,
+                    f: document.getElementById('b1f').value,
+                    s: document.getElementById('b1s').value,
+                    sr: document.getElementById('b1sr').value
+                },
+                nonStriker: {
+                    name: document.getElementById('b2name').value,
+                    r: document.getElementById('b2r').value,
+                    b: document.getElementById('b2b').value,
+                    f: document.getElementById('b2f').value,
+                    s: document.getElementById('b2s').value,
+                    sr: document.getElementById('b2sr').value
+                },
+                bowler: {
+                    name: document.getElementById('b3name').value,
+                    o: document.getElementById('b3o').value,
+                    w: document.getElementById('b3w').value,
+                    r: document.getElementById('b3r').value
+                }
+            };
+
+            const matchRef = ref(db, 'cricket-scoreboard/currentMatch');
+            set(matchRef, data).then(() => {
+                alert("✅ Scoreboard data successfully updated! OBS par check karein.");
+            }).catch((err) => {
+                alert("❌ Error updating: " + err.message);
+            });
+        };
+
+        // --- FUNCTION 4: ACTION BUTTONS (4, 6, 7, W) ---
+        window.updateAction = function(action) {
+            const actionRef = ref(db, 'cricket-scoreboard/currentMatch/lastBall');
+            set(actionRef, {
+                result: action,
+                timestamp: Date.now()
+            }).then(() => {
+                console.log(`Action Updated: ${action}`);
+            }).catch((err) => {
+                console.error("Error updating action:", err);
+            });
+        };
+
+        // --- WINDOW ON LOAD: Run karne par matches load kar dein ---
+        window.loadMatchesFromFirebase();
+
+    </script>
+</body>
+</html>
