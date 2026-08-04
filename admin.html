@@ -1,129 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cricket Scoreboard Admin</title>
-
-    <link rel="stylesheet" href="admin.css">
-</head>
-
-<body>
-
-<div class="container">
-
-    <h1>🏏 Cricket Scoreboard Admin</h1>
-
-    <hr>
-
-    <h2>🎯 Live Match Selector</h2>
-
-    <button onclick="loadMatches()">
-        🔄 Refresh Live Matches
-    </button>
-
-    <br><br>
-
-    <select id="matchSelect">
-
-        <option>
-            Click Refresh Live Matches
-        </option>
-
-    </select>
-
-    <br><br>
-
-    <button onclick="saveMatch()">
-        ✅ Select Match
-    </button>
-
-    <hr>
-
-    <h2>📺 Live Match Information</h2>
-
-    <label>Team 1</label>
-    <input type="text" id="team1">
-
-    <label>Team 2</label>
-    <input type="text" id="team2">
-
-    <label>Runs</label>
-    <input type="number" id="runs">
-
-    <label>Wickets</label>
-    <input type="number" id="wickets">
-
-    <label>Overs</label>
-    <input type="text" id="overs">
-
-    <label>Target</label>
-    <input type="number" id="target">
-
-    <label>Current Run Rate (CRR)</label>
-    <input type="text" id="crr">
-
-    <label>Required Run Rate (RRR)</label>
-    <input type="text" id="rrr">
-
-    <hr>
-
-    <h2>🏏 Batsmen</h2>
-
-    <label>Batsman 1</label>
-    <input type="text" id="batsman1">
-
-    <label>Batsman 1 Score</label>
-    <input type="text" id="batsman1Runs">
-
-    <label>Batsman 2</label>
-    <input type="text" id="batsman2">
-
-    <label>Batsman 2 Score</label>
-    <input type="text" id="batsman2Runs">
-
-    <hr>
-
-    <h2>🎯 Bowler</h2>
-
-    <label>Bowler</label>
-    <input type="text" id="bowler">
-
-    <label>Bowler Figures</label>
-    <input type="text" id="bowlerFigures">
-
-    <hr>
-
-    <h2>📊 Match Details</h2>
-
-    <label>Status</label>
-    <input type="text" id="status">
-
-    <label>Venue</label>
-    <input type="text" id="venue">
-
-    <label>Toss</label>
-    <input type="text" id="toss">
-
-    <label>Last Over</label>
-    <input type="text" id="lastOver">
-
-    <label>Partnership</label>
-    <input type="text" id="partnership">
-
-    <label>Match Phase</label>
-    <input type="text" id="matchPhase">
-
-    <br><br>
-
-    <button onclick="saveScore()">
-        💾 Update Firebase Scoreboard
-    </button>
-
+<!-- Live Match Information ke neeche yeh add karein -->
+<div class="action-section" style="margin-top: 20px; background: #1a1a2e; padding: 15px; border-radius: 10px;">
+    <h3 style="color: #4caf50;">⚡ Update Live Action</h3>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+        <button onclick="updateAction('0')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">0</button>
+        <button onclick="updateAction('1')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">1</button>
+        <button onclick="updateAction('2')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">2</button>
+        <button onclick="updateAction('3')" style="background: #333; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">3</button>
+        <button onclick="updateAction('4')" style="background: #2196F3; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">4</button>
+        <button onclick="updateAction('6')" style="background: #FF9800; color: black; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">6</button>
+        
+        <!-- Aapki demand ke mutabiq '7' number ka button -->
+        <button onclick="updateAction('7')" style="background: #9C27B0; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">7</button>
+        
+        <button onclick="updateAction('W')" style="background: #f44336; color: white; border: none; padding: 10px 20px; border-radius: 5px; font-size: 20px; font-weight: bold; cursor: pointer;">W</button>
+    </div>
 </div>
-
-<script type="module" src="admin.js"></script>
-
-</body>
-</html>
