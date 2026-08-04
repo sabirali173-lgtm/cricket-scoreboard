@@ -1,34 +1,5 @@
-name: Sync Cricket Matches to Firestore
-
-on:
-  schedule:
-    - cron: '*/15 * * * *'  # Har 15 minute mein automatic run hoga
-  workflow_dispatch:        # Aap Actions tab par ja kar manually bhi run kar sakte hain
-
-jobs:
-  sync:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '18'
-
-      - name: Install dependencies
-        run: npm install
-
-      # Yahan hum secret file ko create kar rahe hain (Apna secret ka naam exact same hona chahiye)
       - name: Create serviceAccountKey.json from Secret
-        run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" > serviceAccountKey.json
-
-      - name: Run debug.js (Fetch & Sync to Firestore)
-        run: node debug.js
-        env:
-          API_KEY: ${{ secrets.API_KEY }}
-
-      # Safai (file ko hata dena taaki secure rahe)
-      - name: Clean up
-        run: rm serviceAccountKey.json
+        run: |
+          cat << 'EOF' > serviceAccountKey.json
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          EOF
