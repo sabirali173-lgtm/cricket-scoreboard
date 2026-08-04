@@ -1,10 +1,26 @@
-// debug.js - GitHub Actions Version
+// debug.js - Fixed with Firebase Upload logic
 import fetch from 'node-fetch';
+import { initializeApp } from 'firebase/app';
+import { getDatabase, ref, set } from 'firebase/database';
+
+// 👇 YAHAN APNI FIREBASE CONFIG KEYS PASTE KAREIN (Admin wali same keys) 👇
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
 
 // GitHub Actions mein API_KEY environment variable se lega
 const API_KEY = process.env.API_KEY;
 
-// Agar local testing ke liye, direct key bhi daal sakte ho
+// Agar local testing ke liye, direct key bhi daal sakte ho (Comment remove kar dein)
 // const API_KEY = "your_rapidapi_key_here";
 
 const headers = {
@@ -15,82 +31,65 @@ const headers = {
 
 async function debugAPI() {
     try {
-        console.log('🔍 Debugging API Response...');
-        console.log(`📝 API Key exists: ${!!API_KEY}`);
-        console.log(`📝 API Key length: ${API_KEY?.length || 0}`);
-        
+        console.log('🔍 Fetching API data...');
         if (!API_KEY) {
             console.error('❌ API_KEY is not set!');
-            console.log('📋 Please add API_KEY to GitHub Secrets');
             return;
         }
         
-        console.log('\n📡 Fetching live matches...');
         const response = await fetch('https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live', { headers });
-        
-        console.log(`📊 Response Status: ${response.status}`);
-        console.log(`📊 Response Status Text: ${response.statusText}`);
-        
-        // Show response headers
-        console.log('\n📋 Response Headers:');
-        for (const [key, value] of response.headers) {
-            if (key !== 'x-rapidapi-key') {
-                console.log(`  ${key}: ${value}`);
-            }
+        if (!response.ok) {
+            console.error(`❌ API Error: ${response.status}`);
+            return;
         }
         
         const data = await response.json();
-        
-        console.log('\n📋 Response Structure:');
-        console.log('Top Level Keys:', Object.keys(data));
-        
-        console.log('\n📄 Full Response:');
-        console.log(JSON.stringify(data, null, 2));
-        
-        // Check if matches exist
-        console.log('\n🔍 Searching for matches...');
-        let matchCount = 0;
-        
-        function findMatches(obj, path = '') {
-            if (!obj || typeof obj !== 'object') return;
-            
-            if (Array.isArray(obj)) {
-                for (let i = 0; i < obj.length; i++) {
-                    findMatches(obj[i], `${path}[${i}]`);
-                }
-            } else {
-                // Check if this looks like a match
-                if ((obj.matchId || obj.match_id || obj.match) && 
-                    (obj.team1 || obj.team2 || obj.team1Name || obj.team2Name)) {
-                    matchCount++;
-                    console.log(`  ✅ Match ${matchCount} found at: ${path}`);
-                    console.log(`     ID: ${obj.matchId || obj.match_id || obj.match}`);
-                    console.log(`     Teams: ${obj.team1?.name || obj.team1Name || '?'} vs ${obj.team2?.name || obj.team2Name || '?'}`);
-                    console.log(`     Status: ${obj.status || obj.matchStatus || '?'}`);
-                }
-                
-                // Recursively search
-                for (const key of Object.keys(obj)) {
-                    if (key !== 'ad' && key !== 'ads') {
-                        findMatches(obj[key], `${path}.${key}`);
+        let matchesList = {};
+
+        console.log('📊 Parsing matches from API...');
+
+        // API JSON structure ko traverse karna
+        if (data.typeMatches) {
+            for (const type of data.typeMatches) {
+                if (type.seriesMatches) {
+                    for (const series of type.seriesMatches) {
+                        if (series.seriesAdWrapper && series.seriesAdWrapper.matches) {
+                            for (const matchWrapper of series.seriesAdWrapper.matches) {
+                                const info = matchWrapper.matchInfo;
+                                if (info && info.matchId) {
+                                    // Team ka full naam nikaalna (SName ya Name)
+                                    const team1Name = info.team1?.teamName || "Team 1";
+                                    const team2Name = info.team2?.teamName || "Team 2";
+                                    
+                                    matchesList[info.matchId] = {
+                                        id: info.matchId,
+                                        title: `${team1Name} vs ${team2Name}`,
+                                        team1: team1Name,
+                                        team2: team2Name,
+                                        status: info.status,
+                                        format: info.matchFormat
+                                    };
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-        
-        findMatches(data);
-        console.log(`\n📊 Total matches found: ${matchCount}`);
-        
-        if (matchCount === 0) {
-            console.log('\n⚠️ No matches found in response');
-            console.log('📋 Response structure:', JSON.stringify(data, null, 2));
+
+        // ✅ FIREBASE MEIN SAVE KARNA (Sabse zaroori step!)
+        if (Object.keys(matchesList).length > 0) {
+            const matchesRef = ref(db, 'cricket-scoreboard/availableMatches');
+            await set(matchesRef, matchesList);
+            
+            console.log(`\n🎉 SUCCESS! ${Object.keys(matchesList).length} matches uploaded to Firebase!`);
+            console.log('Ab apne Admin Panel par ja kar "Refresh Live Matches" dabayein.');
+        } else {
+            console.log('\n⚠️ Koi match nahi mila API mein.');
         }
-        
+
     } catch (error) {
         console.error('❌ Error:', error.message);
-        if (error.stack) {
-            console.error('Stack:', error.stack);
-        }
     }
 }
 
