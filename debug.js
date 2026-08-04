@@ -1,43 +1,51 @@
-// debug.js - Fixed with Firebase Upload logic
 import fetch from 'node-fetch';
-import { initializeApp } from 'firebase/app';
-import { getDatabase, ref, set } from 'firebase/database';
+import admin from 'firebase-admin';
+import { readFileSync } from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
 
-// 👇 YAHAN APNI FIREBASE CONFIG KEYS PASTE KAREIN (Admin wali same keys) 👇
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
+dotenv.config(); // .env file ko load karein
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// GitHub Actions mein API_KEY environment variable se lega
+// ✅ Firebase Admin SDK Initialize
+let db;
+try {
+    // Step 1: Apni firebase ki Service Account JSON file yahan rakhni hai (neechay guide hai)
+    const filePath = path.join(__dirname, 'serviceAccountKey.json');
+    const serviceAccount = JSON.parse(readFileSync(filePath, 'utf8'));
+    
+    admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        // Step 2: Apna database URL yahan daalein (Firebase Console se copy karein)
+        databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com"
+    });
+    db = admin.database();
+    console.log("✅ Firebase Admin Initialized");
+} catch (error) {
+    console.error("❌ Firebase Admin Init Error. Kya serviceAccountKey.json file folder mein hai?", error.message);
+    process.exit(1);
+}
+
+// API Key (Ye .env file se aayega)
 const API_KEY = process.env.API_KEY;
-
-// Agar local testing ke liye, direct key bhi daal sakte ho (Comment remove kar dein)
-// const API_KEY = "your_rapidapi_key_here";
+if (!API_KEY) {
+    console.error("❌ .env file mein API_KEY nahi mila!");
+    process.exit(1);
+}
 
 const headers = {
     'x-rapidapi-key': API_KEY,
     'x-rapidapi-host': 'cricbuzz-cricket.p.rapidapi.com',
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    'User-Agent': 'Mozilla/5.0'
 };
 
 async function debugAPI() {
     try {
         console.log('🔍 Fetching API data...');
-        if (!API_KEY) {
-            console.error('❌ API_KEY is not set!');
-            return;
-        }
-        
         const response = await fetch('https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live', { headers });
+        
         if (!response.ok) {
             console.error(`❌ API Error: ${response.status}`);
             return;
@@ -45,10 +53,8 @@ async function debugAPI() {
         
         const data = await response.json();
         let matchesList = {};
-
         console.log('📊 Parsing matches from API...');
 
-        // API JSON structure ko traverse karna
         if (data.typeMatches) {
             for (const type of data.typeMatches) {
                 if (type.seriesMatches) {
@@ -57,7 +63,6 @@ async function debugAPI() {
                             for (const matchWrapper of series.seriesAdWrapper.matches) {
                                 const info = matchWrapper.matchInfo;
                                 if (info && info.matchId) {
-                                    // Team ka full naam nikaalna (SName ya Name)
                                     const team1Name = info.team1?.teamName || "Team 1";
                                     const team2Name = info.team2?.teamName || "Team 2";
                                     
@@ -77,13 +82,12 @@ async function debugAPI() {
             }
         }
 
-        // ✅ FIREBASE MEIN SAVE KARNA (Sabse zaroori step!)
+        // ✅ FIREBASE MEIN SAVE KARNA
         if (Object.keys(matchesList).length > 0) {
-            const matchesRef = ref(db, 'cricket-scoreboard/availableMatches');
-            await set(matchesRef, matchesList);
-            
+            const matchesRef = db.ref('cricket-scoreboard/availableMatches');
+            await matchesRef.set(matchesList);
             console.log(`\n🎉 SUCCESS! ${Object.keys(matchesList).length} matches uploaded to Firebase!`);
-            console.log('Ab apne Admin Panel par ja kar "Refresh Live Matches" dabayein.');
+            console.log('Ab admin.html par "Refresh Live Matches" dabayein!');
         } else {
             console.log('\n⚠️ Koi match nahi mila API mein.');
         }
