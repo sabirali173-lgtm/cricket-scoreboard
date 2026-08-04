@@ -5,60 +5,53 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Cricket Scoreboard</title>
     <style>
-        /* ------------------ BASE STYLES (OBS FRIENDLY) ------------------ */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* ------------------ BASE STYLES ------------------ */
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
         body { 
-            background: transparent; /* OBS Chroma key ke liye transparent */
+            background: transparent; /* OBS ke liye transparent */
             display: flex; justify-content: center; align-items: center; 
             height: 100vh; width: 100vw; overflow: hidden;
         }
         
-        /* 16:9 Aspect Ratio Scoreboard Container */
         .scoreboard-container {
             width: 95vw; height: 95vh; aspect-ratio: 16 / 9;
-            background: #0a0a1a; /* Dark Background */
-            border-radius: 20px; padding: 15px;
+            background: #0a0a1a; border-radius: 20px; padding: 15px;
             display: flex; flex-direction: column; gap: 15px;
             box-shadow: 0 0 20px rgba(0, 255, 0, 0.2);
         }
 
         /* ------------------ TOP SECTION (Score Bar) ------------------ */
         .top-section {
-            display: flex; justify-content: space-between; height: 20%;
-            gap: 10px;
+            display: flex; justify-content: space-between; height: 20%; gap: 10px;
         }
         .team-box {
             width: 30%; padding: 10px 15px; border-radius: 10px;
             display: flex; flex-direction: column; justify-content: center;
-            color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            color: white; 
         }
         .team-a { background: #0050b3; border-bottom: 4px solid #0099ff; }
         .team-b { background: #a3131b; border-bottom: 4px solid #ff4d4d; text-align: right; }
         
-        .team-name { font-size: 24px; font-weight: 800; letter-spacing: 1px; }
-        .team-score { font-size: 45px; font-weight: 900; line-height: 1; }
-        .team-overs { font-size: 20px; font-weight: 600; opacity: 0.9; }
+        .team-name { font-size: 24px; font-weight: 800; }
+        .team-score { font-size: 45px; font-weight: 900; }
+        .team-overs { font-size: 20px; font-weight: 600; }
         .team-crr { font-size: 16px; font-weight: 400; opacity: 0.8; }
 
         .center-box {
             width: 40%; background: #111; border-radius: 10px;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            position: relative; color: white;
-            border-bottom: 4px solid #00ff00;
+            position: relative; color: white; border-bottom: 4px solid #00ff00;
         }
         .center-box .batting-label { font-size: 16px; font-weight: bold; color: #00ff00; position: absolute; top: 5px; }
         
-        /* --------- "6" Hit Animation Box --------- */
         #action-box {
             font-size: 60px; font-weight: 900; color: white;
-            height: 60px; width: 80px; 
-            display: flex; justify-content: center; align-items: center;
+            height: 60px; width: 80px; display: flex; justify-content: center; align-items: center;
             margin: 10px 0; transition: all 0.1s;
         }
         /* Animation Trigger Class */
         .six-hit {
-            background-color: yellow !important; color: black !important;
-            border-radius: 10px;
+            background-color: yellow !important; color: black !important; border-radius: 10px;
             animation: flash-pulse 0.8s ease-in-out;
         }
         @keyframes flash-pulse {
@@ -66,58 +59,34 @@
             50% { transform: scale(1.2); box-shadow: 0 0 30px 10px rgba(255, 255, 0, 0.5); }
             100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 0, 0); }
         }
-        
-        .over-details { font-size: 15px; color: #ccc; position: absolute; bottom: 5px; }
 
-
-        /* ------------------ MIDDLE SECTION (Field) ------------------ */
-        .middle-section {
-            height: 30%; background: transparent; position: relative;
-            display: flex; justify-content: center; align-items: center;
-        }
+        /* ------------------ MIDDLE SECTION ------------------ */
+        .middle-section { height: 30%; display: flex; justify-content: center; align-items: center; }
         .pitch-bg {
             width: 100%; height: 100%; border-radius: 50%;
             background: radial-gradient(circle at 50% 50%, #1d7e1d, #0e3f0e);
             display: flex; justify-content: center; align-items: flex-end; padding-bottom: 20px;
         }
-        .over-balls {
-            display: flex; gap: 10px; background: rgba(0,0,0,0.6);
-            padding: 5px 15px; border-radius: 20px;
-        }
-        .ball-result {
-            font-size: 16px; font-weight: bold; color: white; background: #333;
-            padding: 4px 8px; border-radius: 50%;
-        }
-        .ball-result.wicket { background: #a3131b; }
-        .ball-result.six { background: #ffff00; color: black; }
-
 
         /* ------------------ BOTTOM SECTION (Players) ------------------ */
-        .bottom-section {
-            height: 40%; display: flex; gap: 10px; align-items: stretch;
-        }
+        .bottom-section { height: 40%; display: flex; gap: 10px; align-items: stretch; }
         .player-card {
             flex: 1; background: linear-gradient(180deg, #b81830, #7a0b1b);
-            border-radius: 12px; display: flex; flex-direction: column;
-            align-items: center; justify-content: center; color: white;
-            padding: 10px; box-shadow: 0 0 10px rgba(255,0,0,0.3);
-            border: 1px solid #ff4444;
+            border-radius: 12px; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; color: white; padding: 10px;
         }
-        /* Middle card slightly different color to match your screenshot */
         .player-card:nth-child(2) { background: linear-gradient(180deg, #a3131b, #55050d); }
-        /* Third card blue */
-        .player-card:nth-child(3) { background: linear-gradient(180deg, #0f2a5c, #08142e); border: 1px solid #4444ff; }
+        .player-card:nth-child(3) { background: linear-gradient(180deg, #0f2a5c, #08142e); }
         
-        .p-image { width: 45px; height: 45px; border-radius: 50%; background: white; margin-bottom: 5px; object-fit: cover; border: 2px solid #fff; }
+        .p-image { width: 45px; height: 45px; border-radius: 50%; background: white; margin-bottom: 5px; }
         .p-name { font-size: 22px; font-weight: 700; }
         .p-stats { font-size: 18px; font-weight: 600; }
-        .p-detail { font-size: 14px; font-weight: 400; opacity: 0.9; }
     </style>
 </head>
 <body>
 
     <div class="scoreboard-container">
-        <!-- TOP SECTION -->
+        <!-- TOP SCORE -->
         <div class="top-section">
             <div class="team-box team-a">
                 <div class="team-name">INDIA</div>
@@ -128,8 +97,7 @@
             
             <div class="center-box">
                 <div class="batting-label">BATTING</div>
-                <div id="action-box">6</div>
-                <div class="over-details">Last: 4 W 1 | This: 4 6</div>
+                <div id="action-box">0</div>
             </div>
             
             <div class="team-box team-b">
@@ -140,71 +108,71 @@
             </div>
         </div>
 
-        <!-- MIDDLE SECTION -->
+        <!-- MIDDLE PITCH -->
         <div class="middle-section">
-            <div class="pitch-bg">
-                <div class="over-balls">
-                    <span class="ball-result">4</span>
-                    <span class="ball-result wicket">W</span>
-                    <span class="ball-result">1</span>
-                    <span class="ball-result">0</span>
-                    <span class="ball-result">2</span>
-                    <span class="ball-result six">6</span>
-                </div>
-            </div>
+            <div class="pitch-bg"></div>
         </div>
 
-        <!-- BOTTOM SECTION (3 Batsmen) -->
+        <!-- BOTTOM PLAYERS -->
         <div class="bottom-section">
             <div class="player-card">
                 <img class="p-image" src="https://ui-avatars.com/api/?name=J+Holder&background=random" alt="Img">
                 <div class="p-name">J Holder</div>
                 <div class="p-stats">3 (3)</div>
-                <div class="p-detail">4s: 0  6s: 0  SR:100.0</div>
             </div>
             <div class="player-card">
                 <img class="p-image" src="https://ui-avatars.com/api/?name=A+Hossain&background=random" alt="Img">
                 <div class="p-name">A Hossain</div>
                 <div class="p-stats">51 (31)</div>
-                <div class="p-detail">4s: 3  6s: 6  SR:164.5</div>
             </div>
             <div class="player-card">
                 <img class="p-image" src="https://ui-avatars.com/api/?name=N+Hossain&background=random" alt="Img">
                 <div class="p-name">N Hossain</div>
                 <div class="p-stats">0 (3)</div>
-                <div class="p-detail">4s: 0  6s: 0  SR:0.0</div>
             </div>
         </div>
     </div>
 
-    <!-- JAVASCRIPT - DATA BINDING & ANIMATION TEST -->
-    <script>
-        // 👇 YAHAN APNA FIREBASE / API DATA BINDING CODE DAALNA HAI 👇
-        // Example: firebase.database().ref('matches/match1').on('value', (snapshot) => { ... })
+    <!-- =============== JAVASCRIPT - FIREBASE CONNECTION =============== -->
+    <script type="module">
+        // 👇 IMPORTANT: Yeh apni Firebase ki config keys yahan paste karein 👇
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
 
-        // Abhi maine ek demo function banaya hai jo bolta hai ki jab '6' aaye to animation trigger ho
-        function triggerSixAnimation() {
+        // Firebase Initialize karna
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-database.js";
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Admin se data listen karna
+        const actionRef = ref(db, 'cricket-scoreboard/currentMatch/lastBall');
+        
+        onValue(actionRef, (snapshot) => {
+            const data = snapshot.val();
             const actionBox = document.getElementById('action-box');
-            
-            // 1. Animation class lagao
-            actionBox.classList.add('six-hit');
-            
-            // 2. Text change karo
-            actionBox.innerText = "6";
-            
-            // 3. Animation khatam hone ke baad class hatao (0.8s baad)
-            setTimeout(() => {
-                actionBox.classList.remove('six-hit');
-                actionBox.innerText = " ";
-            }, 800);
-        }
 
-        // TEST: Har 6 second mein khud ba khud "6" trigger karke dikhaya hai taaki aapko animation dikhe
-        setInterval(() => {
-            triggerSixAnimation();
-            // Yahan aap apne data se team score bhi update kar sakte ho:
-            // document.getElementById('teamA-score').innerText = "100/3";
-        }, 6000);
+            if (data && data.result) {
+                // Number ya 'W' update karein (4, 6, 7, W)
+                actionBox.innerText = data.result;
+                
+                // Animation trigger karein (Yellow flash + pulse)
+                actionBox.classList.add('six-hit');
+                
+                // 0.8 second baad animation class hata dein
+                setTimeout(() => {
+                    actionBox.classList.remove('six-hit');
+                }, 800);
+            }
+        });
     </script>
 </body>
 </html>
