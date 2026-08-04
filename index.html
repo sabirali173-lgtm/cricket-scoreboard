@@ -66,14 +66,14 @@
     </div>
 
     <script type="module">
-        // 🔑 🔑 🔑 🔑 🔑 🔑 YAHAN APNI FIREBASE KEYS PASTE KAREIN 🔑 🔑 🔑 🔑 🔑 🔑
+        // 🔑 Aapki di gayi keys yahan set kar di gayi hain
         const firebaseConfig = {
-            apiKey: "YOUR_API_KEY",
-            authDomain: "YOUR_PROJECT.firebaseapp.com",
-            projectId: "YOUR_PROJECT_ID",
-            storageBucket: "YOUR_PROJECT.appspot.com",
-            messagingSenderId: "YOUR_SENDER_ID",
-            appId: "YOUR_APP_ID"
+            apiKey: "AIzaSyCoqYoEqgPiMVnsC2xeARhyDdfOYPWwiLM",
+            authDomain: "obs-cricket-scoreboard.firebaseapp.com",
+            projectId: "obs-cricket-scoreboard",
+            storageBucket: "obs-cricket-scoreboard.firebasestorage.app",
+            messagingSenderId: "593318975208",
+            appId: "1:593318975208:web:507301f084c1f838c21b5d"
         };
 
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
@@ -84,6 +84,7 @@
 
         const liveDocRef = doc(db, 'scoreboard', 'live');
 
+        // ⚡ Live Listener - Admin update hoga toh scoreboard turant change hoga
         onSnapshot(liveDocRef, (snapshot) => {
             if (snapshot.exists()) {
                 const data = snapshot.data();
