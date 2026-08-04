@@ -1,5 +1,2 @@
       - name: Create serviceAccountKey.json from Secret
-        run: |
-          cat << 'EOF' > serviceAccountKey.json
-          ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
-          EOF
+        run: echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}" | base64 -d > serviceAccountKey.json
