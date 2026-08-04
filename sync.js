@@ -1,4 +1,4 @@
-// sync.js - Final Working Version
+// sync.js - Production Ready
 import admin from 'firebase-admin';
 import fetch from 'node-fetch';
 
@@ -220,6 +220,10 @@ async function syncCricketData() {
         const team1Score = matchScore?.team1Score ? processScore(matchScore.team1Score) : { runs: 0, wickets: 0, overs: '0.0' };
         const team2Score = matchScore?.team2Score ? processScore(matchScore.team2Score) : { runs: 0, wickets: 0, overs: '0.0' };
         
+        // Determine batting team
+        const battingTeamId = matchInfo.currBatTeamId || '';
+        const isTeam1Batting = battingTeamId === team1?.teamId;
+        
         const processedData = {
             matchId: matchInfo.matchId,
             matchType: selectedMatch.matchType || '',
@@ -250,6 +254,13 @@ async function syncCricketData() {
                 team2: team2Score
             },
             
+            batting: {
+                teamId: battingTeamId,
+                teamName: battingTeamId === team1?.teamId ? getTeamName(team1) : 
+                          battingTeamId === team2?.teamId ? getTeamName(team2) : '',
+                isTeam1Batting: isTeam1Batting
+            },
+            
             venue: {
                 id: matchInfo.venueInfo?.id || '',
                 ground: matchInfo.venueInfo?.ground || '',
@@ -257,7 +268,6 @@ async function syncCricketData() {
                 timezone: matchInfo.venueInfo?.timezone || ''
             },
             
-            currBatTeamId: matchInfo.currBatTeamId || '',
             isLiveStreamEnabled: matchInfo.livestreamEnabled || false,
             
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
