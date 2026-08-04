@@ -51,41 +51,72 @@ const apiCall = async (url, retries = 2) => {
 };
 
 // ===============================
-// Extract Match ID from Live Data
+// Extract All Matches from Live Data
 // ===============================
-function extractMatchId(liveData, selectedMatchId) {
-    // Try different possible structures
-    const matches = liveData.matches || liveData.matchList || liveData.data || [];
+function extractAllMatches(liveData) {
+    const allMatches = [];
     
-    // If matches is not an array, try to find it
-    let matchArray = [];
-    if (Array.isArray(matches)) {
-        matchArray = matches;
-    } else if (typeof matches === 'object') {
-        // Sometimes the data is nested deeper
-        matchArray = Object.values(matches).flat();
+    // Check if liveData has typeMatches
+    if (liveData.typeMatches && Array.isArray(liveData.typeMatches)) {
+        for (const typeMatch of liveData.typeMatches) {
+            if (typeMatch.seriesMatches && Array.isArray(typeMatch.seriesMatches)) {
+                for (const series of typeMatch.seriesMatches) {
+                    if (series.matches && Array.isArray(series.matches)) {
+                        // Add match type and series info to each match
+                        for (const match of series.matches) {
+                            allMatches.push({
+                                ...match,
+                                matchType: typeMatch.matchType || '',
+                                seriesName: series.seriesName || '',
+                                seriesId: series.seriesId || ''
+                            });
+                        }
+                    }
+                }
+            }
+        }
     }
     
-    console.log(`🔍 Found ${matchArray.length} matches in live data`);
+    // If no matches found, try other possible structures
+    if (allMatches.length === 0) {
+        // Try to find matches in other keys
+        for (const key of Object.keys(liveData)) {
+            if (Array.isArray(liveData[key])) {
+                for (const item of liveData[key]) {
+                    if (item.matches && Array.isArray(item.matches)) {
+                        for (const match of item.matches) {
+                            allMatches.push(match);
+                        }
+                    }
+                }
+            }
+        }
+    }
     
-    // Find the match
-    const match = matchArray.find(m => 
-        m.id === selectedMatchId || 
-        m.matchId === selectedMatchId ||
-        m.match_id === selectedMatchId ||
-        String(m.id) === String(selectedMatchId)
-    );
-    
-    return match;
+    console.log(`🔍 Found ${allMatches.length} matches in live data`);
+    return allMatches;
 }
 
 // ===============================
-// Get Correct Match ID Format
+// Find Match by ID
 // ===============================
-function getCricbuzzMatchId(match) {
-    // Cricbuzz API uses numeric IDs for hscard endpoint
-    // The ID from live matches might be different
-    return match.matchId || match.id || match.match_id;
+function findMatchById(allMatches, selectedMatchId) {
+    // Try different ID fields
+    return allMatches.find(match => {
+        const matchId = match.matchId || match.id || match.match_id || match.matchid;
+        return String(matchId) === String(selectedMatchId);
+    });
+}
+
+// ===============================
+// Get Match Info for Display
+// ===============================
+function getMatchDisplayName(match) {
+    const team1 = match.team1?.name || match.team1Name || 'Team 1';
+    const team2 = match.team2?.name || match.team2Name || 'Team 2';
+    const status = match.status || match.matchStatus || 'Upcoming';
+    const matchDesc = match.matchDesc || match.matchDescription || '';
+    return `${team1} vs ${team2} | ${matchDesc} | ${status}`;
 }
 
 // ===============================
@@ -102,12 +133,17 @@ async function syncCricketData() {
         console.log('\n📊 Fetching live matches...');
         const liveData = await apiCall('https://cricbuzz-cricket.p.rapidapi.com/matches/v1/live');
         
-        // Store matches
+        // Extract all matches
+        const allMatches = extractAllMatches(liveData);
+        
+        // Store full live data in Firebase
         await db.collection('scoreboard').doc('matches').set({
             data: liveData,
+            matchesList: allMatches,
+            totalMatches: allMatches.length,
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         });
-        console.log('✅ Live matches stored');
+        console.log(`✅ Live matches stored (${allMatches.length} matches)`);
 
         // Step 2: Get Selected Match
         console.log('\n📋 Fetching settings...');
@@ -120,71 +156,80 @@ async function syncCricketData() {
         }
         console.log(`✅ Selected match ID: ${selectedMatchId}`);
 
-        // Step 3: Find match in live data
-        const match = extractMatchId(liveData, selectedMatchId);
+        // Step 3: Find the selected match
+        const selectedMatch = findMatchById(allMatches, selectedMatchId);
         
-        if (!match) {
+        if (!selectedMatch) {
             console.log('❌ Match not found in live data');
-            console.log('📋 Available matches:', Object.keys(liveData));
+            console.log('📋 Available matches:');
+            allMatches.slice(0, 5).forEach((match, index) => {
+                console.log(`  ${index + 1}. ${getMatchDisplayName(match)}`);
+            });
+            if (allMatches.length > 5) {
+                console.log(`  ... and ${allMatches.length - 5} more matches`);
+            }
             return;
         }
 
-        // Step 4: Get the correct match ID format
-        const cricbuzzMatchId = getCricbuzzMatchId(match);
-        console.log(`🔑 Cricbuzz Match ID: ${cricbuzzMatchId}`);
+        console.log(`✅ Found match: ${getMatchDisplayName(selectedMatch)}`);
+
+        // Step 4: Get the correct match ID
+        const matchId = selectedMatch.matchId || selectedMatch.id || selectedMatch.match_id;
+        console.log(`🔑 Match ID: ${matchId}`);
 
         // Step 5: Get Match Details
         console.log('\n🏏 Fetching match details...');
         let matchDetails = null;
         
-        // Try with numeric ID first (Cricbuzz expects numeric)
-        const numericId = parseInt(cricbuzzMatchId) || cricbuzzMatchId;
-        
-        // Try multiple endpoints with both ID formats
+        // Try different endpoints with different ID formats
         const endpointsToTry = [
-            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${numericId}/hscard`,
-            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${cricbuzzMatchId}/hscard`,
-            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${numericId}/scard`,
-            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${cricbuzzMatchId}/scard`
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${matchId}/hscard`,
+            `https://cricbuzz-cricket.p.rapidapi.com/mcenter/v1/${matchId}/scard`,
+            `https://cricbuzz-cricket.p.rapidapi.com/cricket/v1/match/${matchId}/score`
         ];
 
         for (const endpoint of endpointsToTry) {
             try {
                 matchDetails = await apiCall(endpoint);
-                console.log(`✅ Endpoint success: ${endpoint}`);
+                console.log(`✅ Success with: ${endpoint}`);
                 break;
             } catch (error) {
-                console.log(`⚠️ Endpoint failed: ${endpoint}`);
+                console.log(`⚠️ Failed: ${endpoint}`);
             }
         }
 
         // If all endpoints fail, use the match data from live
         if (!matchDetails) {
-            console.log('⚠️ Using match data from live matches');
-            matchDetails = match;
+            console.log('⚠️ Using match data from live response');
+            matchDetails = selectedMatch;
         }
 
         // Step 6: Process and Store
         console.log('\n💾 Processing match data...');
         const processedData = {
+            matchId: matchId,
+            matchType: selectedMatch.matchType || '',
+            seriesName: selectedMatch.seriesName || '',
+            matchDesc: selectedMatch.matchDesc || selectedMatch.matchDescription || '',
             teams: {
-                team1: matchDetails.team1 || matchDetails.team1Name || { name: 'Team 1' },
-                team2: matchDetails.team2 || matchDetails.team2Name || { name: 'Team 2' }
+                team1: selectedMatch.team1 || { name: 'Team 1' },
+                team2: selectedMatch.team2 || { name: 'Team 2' }
             },
             score: {
-                team1: matchDetails.score?.team1 || matchDetails.team1Score || { runs: 0, wickets: 0, overs: '0.0' },
-                team2: matchDetails.score?.team2 || matchDetails.team2Score || { runs: 0, wickets: 0, overs: '0.0' }
+                team1: matchDetails.score?.team1 || selectedMatch.team1Score || { runs: 0, wickets: 0, overs: '0.0' },
+                team2: matchDetails.score?.team2 || selectedMatch.team2Score || { runs: 0, wickets: 0, overs: '0.0' }
             },
-            batsmen: matchDetails.batsmen || matchDetails.batsman || [],
-            bowler: matchDetails.bowler || matchDetails.bowlers || { name: '', figures: '' },
-            partnership: matchDetails.partnership || { runs: 0, balls: 0 },
-            runRate: matchDetails.runRate || matchDetails.crr || 0,
-            requiredRunRate: matchDetails.requiredRunRate || matchDetails.rrr || 0,
-            matchPhase: matchDetails.matchPhase || matchDetails.status || 'Live',
-            matchResult: matchDetails.result || '',
-            venue: matchDetails.venue || '',
-            tossWinner: matchDetails.tossWinner || '',
-            tossDecision: matchDetails.tossDecision || '',
+            batsmen: matchDetails.batsmen || selectedMatch.batsmen || [],
+            bowler: matchDetails.bowler || selectedMatch.bowler || { name: '', figures: '' },
+            partnership: matchDetails.partnership || selectedMatch.partnership || { runs: 0, balls: 0 },
+            runRate: matchDetails.runRate || matchDetails.crr || selectedMatch.crr || 0,
+            requiredRunRate: matchDetails.requiredRunRate || matchDetails.rrr || selectedMatch.rrr || 0,
+            matchPhase: matchDetails.matchPhase || matchDetails.status || selectedMatch.status || 'Live',
+            matchStatus: selectedMatch.status || '',
+            matchResult: matchDetails.result || selectedMatch.result || '',
+            venue: matchDetails.venue || selectedMatch.venue || '',
+            tossWinner: matchDetails.tossWinner || selectedMatch.tossWinner || '',
+            tossDecision: matchDetails.tossDecision || selectedMatch.tossDecision || '',
             lastUpdated: admin.firestore.FieldValue.serverTimestamp()
         };
 
