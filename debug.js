@@ -3,9 +3,8 @@ import admin from 'firebase-admin';
 import { readFileSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
 
-dotenv.config();
+// (dotenv hata diya gaya hai, ab hum GitHub Actions ke env variable ko seedha use karenge)
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -19,7 +18,7 @@ try {
         credential: admin.credential.cert(serviceAccount)
     });
     
-    // Firestore instance le rahe hain
+    // Firestore instance
     db = admin.firestore();
     console.log("✅ Firebase Admin (Firestore) Initialized");
 } catch (error) {
@@ -27,9 +26,10 @@ try {
     process.exit(1);
 }
 
+// 🔑 GitHub Actions ka environment variable seedha use kiya
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
-    console.error("❌ .env mein API_KEY nahi mila!");
+    console.error("❌ API_KEY environment variable set nahi hai!");
     process.exit(1);
 }
 
@@ -79,7 +79,7 @@ async function debugAPI() {
             }
         }
 
-        // ✅ FIRESTORE MEIN SAVE (scoreboard collection -> availableMatches doc)
+        // ✅ FIRESTORE MEIN SAVE
         if (matchesList.length > 0) {
             const docRef = db.collection('scoreboard').doc('availableMatches');
             await docRef.set({ list: matchesList });
